@@ -1,7 +1,7 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { Brain, LogOut, User, LayoutDashboard } from 'lucide-react';
+import { Brain, LogOut, User, LayoutDashboard, Building2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,10 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 export function Navbar() {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Determine if we're on the candidate landing page
+  const isCandidateLanding = location.pathname === '/practice';
 
   const handleSignOut = async () => {
     await signOut();
@@ -33,7 +37,7 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to={isCandidateLanding ? '/practice' : '/'} className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-primary">
             <Brain className="h-5 w-5 text-primary-foreground" />
           </div>
@@ -89,12 +93,21 @@ export function Navbar() {
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/auth">Sign In</Link>
-              </Button>
-              <Button variant="hero" size="sm" asChild>
-                <Link to="/auth">Get Started</Link>
-              </Button>
+              {isCandidateLanding ? (
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/">
+                    <Building2 className="h-4 w-4 mr-2" />
+                    I'm a Business
+                  </Link>
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/practice">
+                    <User className="h-4 w-4 mr-2" />
+                    I'm a Candidate
+                  </Link>
+                </Button>
+              )}
             </>
           )}
         </div>
