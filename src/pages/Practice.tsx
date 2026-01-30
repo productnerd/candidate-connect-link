@@ -141,7 +141,7 @@ export default function Practice() {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="xl" variant="accent" asChild className="group">
-                <Link to="/practice/start">
+                <Link to="/auth/candidate">
                   Start Free Practice Test
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
@@ -243,7 +243,7 @@ export default function Practice() {
                     size="lg"
                     asChild
                   >
-                    <Link to={bundle.price === '$0' ? '/practice/start' : '/practice/purchase'}>
+                    <Link to="/auth/candidate">
                       {bundle.cta}
                     </Link>
                   </Button>
@@ -299,7 +299,7 @@ export default function Practice() {
             Start with a free practice test and see where you stand.
           </p>
           <Button size="xl" variant="accent" asChild className="group">
-            <Link to="/practice/start">
+            <Link to="/auth/candidate">
               Take Free Practice Test
               <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>

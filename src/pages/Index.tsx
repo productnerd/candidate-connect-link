@@ -80,7 +80,7 @@ export default function Index() {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="xl" variant="accent" asChild className="group">
-                <Link to="/auth">
+                <Link to="/auth/employer">
                   Start Hiring Smarter
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
@@ -182,7 +182,7 @@ export default function Index() {
             Join thousands of companies using CCAT assessments to find top talent.
           </p>
           <Button size="xl" variant="accent" asChild className="group">
-            <Link to="/auth">
+            <Link to="/auth/employer">
               Get Started Free
               <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>
