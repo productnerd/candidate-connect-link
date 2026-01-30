@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Building2, User, Mail, Lock, AlertCircle } from 'lucide-react';
@@ -17,35 +16,51 @@ const loginSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
-const signupSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string(),
-  fullName: z.string().min(2, 'Name must be at least 2 characters'),
-  role: z.enum(['employer', 'candidate']),
-  organizationName: z.string().optional(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-}).refine((data) => {
-  if (data.role === 'employer') {
-    return data.organizationName && data.organizationName.length >= 2;
+const createSignupSchema = (role: 'employer' | 'candidate') => {
+  const baseSchema = z.object({
+    email: z.string().email('Please enter a valid email address'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
+    confirmPassword: z.string(),
+    fullName: z.string().min(2, 'Name must be at least 2 characters'),
+    organizationName: z.string().optional(),
+  }).refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
+
+  if (role === 'employer') {
+    return baseSchema.refine((data) => {
+      return data.organizationName && data.organizationName.length >= 2;
+    }, {
+      message: 'Organization name is required',
+      path: ['organizationName'],
+    });
   }
-  return true;
-}, {
-  message: 'Organization name is required for employers',
-  path: ['organizationName'],
-});
+
+  return baseSchema;
+};
 
 type LoginFormData = z.infer<typeof loginSchema>;
-type SignupFormData = z.infer<typeof signupSchema>;
+type SignupFormData = {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  fullName: string;
+  organizationName?: string;
+};
 
-export function AuthForm() {
+interface AuthFormProps {
+  role: 'employer' | 'candidate';
+}
+
+export function AuthForm({ role }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+
+  const signupSchema = createSignupSchema(role);
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -62,12 +77,9 @@ export function AuthForm() {
       password: '',
       confirmPassword: '',
       fullName: '',
-      role: 'candidate',
       organizationName: '',
     },
   });
-
-  const watchRole = signupForm.watch('role');
 
   const handleLogin = async (data: LoginFormData) => {
     setIsLoading(true);
@@ -97,8 +109,8 @@ export function AuthForm() {
 
     const { error } = await signUp(data.email, data.password, {
       full_name: data.fullName,
-      role: data.role,
-      organization_name: data.role === 'employer' ? data.organizationName : undefined,
+      role: role,
+      organization_name: role === 'employer' ? data.organizationName : undefined,
     });
 
     if (error) {
@@ -115,9 +127,19 @@ export function AuthForm() {
     setIsLoading(false);
   };
 
+  const isEmployer = role === 'employer';
+  const roleLabel = isEmployer ? 'Business' : 'Candidate';
+  const RoleIcon = isEmployer ? Building2 : User;
+
   return (
     <Card className="w-full max-w-md shadow-xl border-0 card-elevated">
       <CardHeader className="space-y-1 pb-6">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <RoleIcon className="h-5 w-5 text-primary" />
+          </div>
+          <span className="text-sm font-medium text-muted-foreground">{roleLabel} Account</span>
+        </div>
         <CardTitle className="text-2xl font-bold text-center">Welcome to CCAT</CardTitle>
         <CardDescription className="text-center">
           Sign in to your account or create a new one
@@ -229,27 +251,7 @@ export function AuthForm() {
                 )}
               </div>
 
-              <div className="space-y-3">
-                <Label>I am a...</Label>
-                <RadioGroup
-                  value={watchRole}
-                  onValueChange={(value: 'employer' | 'candidate') => signupForm.setValue('role', value)}
-                  className="grid grid-cols-2 gap-4"
-                >
-                  <div className={`relative flex items-center space-x-3 rounded-lg border-2 p-4 cursor-pointer transition-all ${watchRole === 'employer' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}>
-                    <RadioGroupItem value="employer" id="employer" className="sr-only" />
-                    <Building2 className="h-5 w-5 text-primary" />
-                    <Label htmlFor="employer" className="cursor-pointer font-medium">Employer</Label>
-                  </div>
-                  <div className={`relative flex items-center space-x-3 rounded-lg border-2 p-4 cursor-pointer transition-all ${watchRole === 'candidate' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}>
-                    <RadioGroupItem value="candidate" id="candidate" className="sr-only" />
-                    <User className="h-5 w-5 text-primary" />
-                    <Label htmlFor="candidate" className="cursor-pointer font-medium">Candidate</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              {watchRole === 'employer' && (
+              {isEmployer && (
                 <div className="space-y-2 animate-fade-in">
                   <Label htmlFor="org-name">Organization Name</Label>
                   <div className="relative">

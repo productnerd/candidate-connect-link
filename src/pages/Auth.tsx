@@ -1,12 +1,18 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { useAuth } from '@/hooks/useAuth';
-import { Brain } from 'lucide-react';
+import { Brain, Building2, User } from 'lucide-react';
 
 export default function Auth() {
+  const { role = 'candidate' } = useParams<{ role?: 'employer' | 'candidate' }>();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+
+  // Validate role parameter
+  const validRole: 'employer' | 'candidate' = role === 'employer' ? 'employer' : 'candidate';
+  const isEmployer = validRole === 'employer';
+  const alternateRole = isEmployer ? 'candidate' : 'employer';
 
   useEffect(() => {
     if (!loading && user) {
@@ -35,14 +41,29 @@ export default function Auth() {
           </div>
           
           <div className="space-y-6">
-            <h1 className="text-4xl font-bold leading-tight">
-              Hire smarter with<br />
-              <span className="text-gradient-hero">cognitive assessments</span>
-            </h1>
-            <p className="text-lg text-primary-foreground/80 max-w-md">
-              The CCAT (Criteria Cognitive Aptitude Test) helps you identify top candidates 
-              by measuring problem-solving abilities, learning capacity, and critical thinking skills.
-            </p>
+            {isEmployer ? (
+              <>
+                <h1 className="text-4xl font-bold leading-tight">
+                  Hire smarter with<br />
+                  <span className="text-gradient-hero">cognitive assessments</span>
+                </h1>
+                <p className="text-lg text-primary-foreground/80 max-w-md">
+                  The CCAT (Criteria Cognitive Aptitude Test) helps you identify top candidates 
+                  by measuring problem-solving abilities, learning capacity, and critical thinking skills.
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="text-4xl font-bold leading-tight">
+                  Ace your CCAT with<br />
+                  <span className="text-gradient-hero">practice that works</span>
+                </h1>
+                <p className="text-lg text-primary-foreground/80 max-w-md">
+                  Prepare for your cognitive aptitude test with realistic practice exams. 
+                  Build confidence, improve speed, and maximize your score.
+                </p>
+              </>
+            )}
             
             <div className="grid grid-cols-3 gap-4 pt-8">
               <div className="p-4 rounded-lg bg-white/10 backdrop-blur-sm">
@@ -71,7 +92,35 @@ export default function Auth() {
       </div>
 
       {/* Right side - Auth Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background">
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 bg-background">
+        {/* Role Toggle */}
+        <div className="w-full max-w-md mb-6">
+          <div className="flex items-center justify-center p-1 rounded-lg bg-muted">
+            <Link
+              to="/auth/employer"
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                isEmployer 
+                  ? 'bg-background shadow-sm text-foreground' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Building2 className="h-4 w-4" />
+              I'm a Business
+            </Link>
+            <Link
+              to="/auth/candidate"
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                !isEmployer 
+                  ? 'bg-background shadow-sm text-foreground' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <User className="h-4 w-4" />
+              I'm a Candidate
+            </Link>
+          </div>
+        </div>
+
         <div className="w-full max-w-md">
           <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
             <div className="p-2 rounded-lg bg-primary">
@@ -79,7 +128,7 @@ export default function Auth() {
             </div>
             <span className="text-xl font-bold">CCAT Platform</span>
           </div>
-          <AuthForm />
+          <AuthForm role={validRole} />
         </div>
       </div>
     </div>
