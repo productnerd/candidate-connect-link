@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import SendInvitation from "./pages/SendInvitation";
 import TestLibrary from "./pages/TestLibrary";
+import Practice from "./pages/Practice";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/practice" element={<Practice />} />
             <Route 
               path="/dashboard" 
               element={
