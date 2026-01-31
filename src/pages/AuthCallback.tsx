@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        const type = searchParams.get('type');
+        
         // Get the session from the URL hash (Supabase handles this automatically)
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
@@ -19,10 +22,23 @@ export default function AuthCallback() {
           return;
         }
 
+        // Handle password recovery flow
+        if (type === 'recovery') {
+          // User is coming from password reset email
+          // Redirect to reset password page
+          navigate('/auth/reset-password', { replace: true });
+          return;
+        }
+
         if (!session) {
           // No session yet, wait for auth state change
           const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, newSession) => {
+              if (event === 'PASSWORD_RECOVERY') {
+                subscription.unsubscribe();
+                navigate('/auth/reset-password', { replace: true });
+                return;
+              }
               if (event === 'SIGNED_IN' && newSession) {
                 subscription.unsubscribe();
                 await redirectBasedOnRole(newSession.user.id);
@@ -70,7 +86,7 @@ export default function AuthCallback() {
     };
 
     handleAuthCallback();
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   if (error) {
     return (

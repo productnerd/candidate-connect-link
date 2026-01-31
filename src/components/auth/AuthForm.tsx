@@ -5,15 +5,19 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Building2, User, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Loader2, Building2, User, Mail, Lock, AlertCircle, ArrowLeft } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+});
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
 });
 
 const createSignupSchema = (role: 'employer' | 'candidate') => {
@@ -41,6 +45,7 @@ const createSignupSchema = (role: 'employer' | 'candidate') => {
 };
 
 type LoginFormData = z.infer<typeof loginSchema>;
+type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 type SignupFormData = {
   email: string;
   password: string;
@@ -57,7 +62,8 @@ export function AuthForm({ role }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const { signIn, signUp } = useAuth();
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const { signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
 
   const signupSchema = createSignupSchema(role);
@@ -67,6 +73,13 @@ export function AuthForm({ role }: AuthFormProps) {
     defaultValues: {
       email: '',
       password: '',
+    },
+  });
+
+  const forgotPasswordForm = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: '',
     },
   });
 
@@ -107,6 +120,23 @@ export function AuthForm({ role }: AuthFormProps) {
     }
   };
 
+  const handleForgotPassword = async (data: ForgotPasswordFormData) => {
+    setIsLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    const { error } = await resetPassword(data.email);
+
+    if (error) {
+      setError(error.message);
+      setIsLoading(false);
+      return;
+    }
+
+    setSuccessMessage('Password reset email sent! Check your inbox for a link to reset your password.');
+    setIsLoading(false);
+  };
+
   const handleSignup = async (data: SignupFormData) => {
     setIsLoading(true);
     setError(null);
@@ -133,8 +163,78 @@ export function AuthForm({ role }: AuthFormProps) {
   };
 
   const isEmployer = role === 'employer';
-  const roleLabel = isEmployer ? 'Business' : 'Candidate';
-  const RoleIcon = isEmployer ? Building2 : User;
+
+  // Forgot Password View
+  if (showForgotPassword) {
+    return (
+      <Card className="w-full max-w-md shadow-xl border-0 card-elevated">
+        <CardContent className="pt-6">
+          <button
+            type="button"
+            onClick={() => {
+              setShowForgotPassword(false);
+              setError(null);
+              setSuccessMessage(null);
+              forgotPasswordForm.reset();
+            }}
+            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to sign in
+          </button>
+
+          <h2 className="text-xl font-semibold mb-2">Reset your password</h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            Enter your email address and we'll send you a link to reset your password.
+          </p>
+
+          {error && (
+            <div className="flex items-center gap-2 p-3 mb-4 text-sm rounded-lg bg-destructive/10 text-destructive">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="flex items-center gap-2 p-3 mb-4 text-sm rounded-lg bg-success/10 text-success">
+              <Mail className="h-4 w-4 flex-shrink-0" />
+              <span>{successMessage}</span>
+            </div>
+          )}
+
+          <form onSubmit={forgotPasswordForm.handleSubmit(handleForgotPassword)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="forgot-email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="forgot-email"
+                  type="email"
+                  placeholder="you@example.com"
+                  className="pl-10"
+                  {...forgotPasswordForm.register('email')}
+                />
+              </div>
+              {forgotPasswordForm.formState.errors.email && (
+                <p className="text-sm text-destructive">{forgotPasswordForm.formState.errors.email.message}</p>
+              )}
+            </div>
+
+            <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                'Send Reset Link'
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md shadow-xl border-0 card-elevated">
@@ -179,7 +279,20 @@ export function AuthForm({ role }: AuthFormProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="login-password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="login-password">Password</Label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgotPassword(true);
+                      setError(null);
+                      setSuccessMessage(null);
+                    }}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
