@@ -1,4 +1,4 @@
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Option can be either a string (text) or an object with id and text/image_url
@@ -20,6 +20,8 @@ interface QuestionOptionsProps {
   onSelect: (answer: string) => void;
   category?: string; // 'math_logic' | 'verbal_reasoning' | 'spatial_reasoning'
   disabled?: boolean;
+  correctAnswer?: string; // For learning mode - shows which answer is correct
+  showCorrect?: boolean; // Whether to show correct/incorrect styling
 }
 
 function isImageOption(opt: Option): opt is ImageOption {
@@ -54,6 +56,8 @@ export function QuestionOptions({
   onSelect,
   category,
   disabled = false,
+  correctAnswer,
+  showCorrect = false,
 }: QuestionOptionsProps) {
   // Check if this is a spatial reasoning question with image options
   const hasImageOptions = options.some(opt => isImageOption(opt));
@@ -61,42 +65,60 @@ export function QuestionOptions({
   if (hasImageOptions) {
     // Image grid layout for spatial reasoning
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {options.map((option, idx) => {
-          const value = getOptionValue(option);
-          const display = getOptionDisplay(option);
-          const isSelected = selectedAnswer === value;
-          const letter = String.fromCharCode(65 + idx); // A, B, C, D...
-          
-          return (
-            <button
-              key={idx}
-              onClick={() => !disabled && onSelect(value)}
-              disabled={disabled}
-              className={cn(
-                'relative aspect-square rounded-lg border-2 p-2 transition-all overflow-hidden group',
-                isSelected
-                  ? 'border-primary bg-primary/10 ring-2 ring-primary shadow-lg'
-                  : 'border-border hover:border-primary/50 hover:bg-muted/50',
-                disabled && 'opacity-50 cursor-not-allowed'
-              )}
-            >
-              {/* Option letter badge */}
-              <div className={cn(
-                'absolute top-2 left-2 w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center z-10',
-                isSelected
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground group-hover:bg-primary/20'
-              )}>
-                {letter}
-              </div>
-              
-              {/* Selection indicator */}
-              {isSelected && (
-                <div className="absolute top-2 right-2 z-10">
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      {options.map((option, idx) => {
+        const value = getOptionValue(option);
+        const display = getOptionDisplay(option);
+        const isSelected = selectedAnswer === value;
+        const isCorrect = showCorrect && correctAnswer === value;
+        const isWrong = showCorrect && isSelected && correctAnswer !== value;
+        const letter = String.fromCharCode(65 + idx); // A, B, C, D...
+        
+        return (
+          <button
+            key={idx}
+            onClick={() => !disabled && onSelect(value)}
+            disabled={disabled}
+            className={cn(
+              'relative aspect-square rounded-lg border-2 p-2 transition-all overflow-hidden group',
+              showCorrect && isCorrect
+                ? 'border-success bg-success/10 ring-2 ring-success shadow-lg'
+                : showCorrect && isWrong
+                  ? 'border-destructive bg-destructive/10 ring-2 ring-destructive'
+                  : isSelected
+                    ? 'border-primary bg-primary/10 ring-2 ring-primary shadow-lg'
+                    : 'border-border hover:border-primary/50 hover:bg-muted/50',
+              disabled && !showCorrect && 'opacity-50 cursor-not-allowed'
+            )}
+          >
+            {/* Option letter badge */}
+            <div className={cn(
+              'absolute top-2 left-2 w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center z-10',
+              showCorrect && isCorrect
+                ? 'bg-success text-success-foreground'
+                : showCorrect && isWrong
+                  ? 'bg-destructive text-destructive-foreground'
+                  : isSelected
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground group-hover:bg-primary/20'
+            )}>
+              {letter}
+            </div>
+            
+            {/* Selection indicator */}
+            {(isSelected || (showCorrect && isCorrect)) && (
+              <div className="absolute top-2 right-2 z-10">
+                {showCorrect ? (
+                  isCorrect ? (
+                    <CheckCircle className="h-5 w-5 text-success" />
+                  ) : isWrong ? (
+                    <XCircle className="h-5 w-5 text-destructive" />
+                  ) : null
+                ) : (
                   <CheckCircle className="h-5 w-5 text-primary" />
-                </div>
-              )}
+                )}
+              </div>
+            )}
               
               {/* Image */}
               {display.type === 'image' ? (
@@ -124,6 +146,8 @@ export function QuestionOptions({
         const value = getOptionValue(option);
         const display = getOptionDisplay(option);
         const isSelected = selectedAnswer === value;
+        const isCorrect = showCorrect && correctAnswer === value;
+        const isWrong = showCorrect && isSelected && correctAnswer !== value;
         
         return (
           <button
@@ -132,20 +156,36 @@ export function QuestionOptions({
             disabled={disabled}
             className={cn(
               'w-full p-4 rounded-lg border text-left transition-all',
-              isSelected
-                ? 'border-primary bg-primary/10 ring-2 ring-primary'
-                : 'border-border hover:border-primary/50 hover:bg-muted/50',
-              disabled && 'opacity-50 cursor-not-allowed'
+              showCorrect && isCorrect
+                ? 'border-success bg-success/10 ring-2 ring-success'
+                : showCorrect && isWrong
+                  ? 'border-destructive bg-destructive/10 ring-2 ring-destructive'
+                  : isSelected
+                    ? 'border-primary bg-primary/10 ring-2 ring-primary'
+                    : 'border-border hover:border-primary/50 hover:bg-muted/50',
+              disabled && !showCorrect && 'opacity-50 cursor-not-allowed'
             )}
           >
             <div className="flex items-center gap-3">
               <div className={cn(
                 'w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0',
-                isSelected
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-muted-foreground'
+                showCorrect && isCorrect
+                  ? 'border-success bg-success text-success-foreground'
+                  : showCorrect && isWrong
+                    ? 'border-destructive bg-destructive text-destructive-foreground'
+                    : isSelected
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-muted-foreground'
               )}>
-                {isSelected && <CheckCircle className="h-4 w-4" />}
+                {showCorrect ? (
+                  isCorrect ? (
+                    <CheckCircle className="h-4 w-4" />
+                  ) : isWrong ? (
+                    <XCircle className="h-4 w-4" />
+                  ) : null
+                ) : (
+                  isSelected && <CheckCircle className="h-4 w-4" />
+                )}
               </div>
               <span className="flex-1">{display.content}</span>
             </div>
