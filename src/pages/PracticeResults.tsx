@@ -16,8 +16,8 @@ import {
   XCircle
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
+import { loadPracticeSession, type PracticeSessionState } from '@/lib/practiceSessionStorage';
 
-type TestResult = Tables<'test_results'>;
 type TestLibrary = Tables<'test_library'>;
 
 export default function PracticeResults() {
@@ -25,7 +25,7 @@ export default function PracticeResults() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
-  const [result, setResult] = useState<TestResult | null>(null);
+  const [session, setSession] = useState<PracticeSessionState | null>(null);
   const [test, setTest] = useState<TestLibrary | null>(null);
 
   useEffect(() => {
@@ -34,32 +34,24 @@ export default function PracticeResults() {
 
   const loadResults = async () => {
     if (!sessionId) {
-      navigate('/dashboard');
+      navigate('/practice', { replace: true });
       return;
     }
 
     try {
-      // Fetch result by session ID
-      const { data: resultData, error: resultError } = await supabase
-        .from('test_results')
-        .select('*')
-        .eq('session_id', sessionId)
-        .maybeSingle();
-
-      if (resultError) throw resultError;
-      
-      if (!resultData) {
-        navigate('/dashboard');
+      const local = loadPracticeSession(sessionId);
+      if (!local || !local.result) {
+        navigate('/practice', { replace: true });
         return;
       }
 
-      setResult(resultData);
+      setSession(local);
 
-      // Fetch test details
+      // Fetch test details (public)
       const { data: testData, error: testError } = await supabase
         .from('test_library')
         .select('*')
-        .eq('id', resultData.test_id)
+        .eq('id', local.testId)
         .single();
 
       if (testError) throw testError;
@@ -67,7 +59,7 @@ export default function PracticeResults() {
 
     } catch (err) {
       console.error('Error loading results:', err);
-      navigate('/dashboard');
+      navigate('/practice', { replace: true });
     } finally {
       setLoading(false);
     }
@@ -101,9 +93,11 @@ export default function PracticeResults() {
     );
   }
 
-  if (!result || !test) {
+  if (!session?.result || !test) {
     return null;
   }
+
+  const result = session.result;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 py-12 px-4">
@@ -152,7 +146,7 @@ export default function PracticeResults() {
               <div className="p-4 bg-muted/50 rounded-lg">
                 <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                   <Clock className="h-4 w-4" />
-                  <span className="text-2xl font-bold">{formatTime(result.time_taken_seconds || 0)}</span>
+                <span className="text-2xl font-bold">{formatTime(result.timeTakenSeconds || 0)}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">Time Taken</p>
               </div>
@@ -181,7 +175,7 @@ export default function PracticeResults() {
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Avg. Time per Question</span>
                 <span className="font-medium">
-                  {formatTime(Math.round((result.time_taken_seconds || 0) / test.question_count))}
+                   {formatTime(Math.round((result.timeTakenSeconds || 0) / test.question_count))}
                 </span>
               </div>
             </div>

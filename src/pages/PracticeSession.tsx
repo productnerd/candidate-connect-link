@@ -16,16 +16,15 @@ import {
   AlertCircle
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
+import {
+  loadPracticeSession,
+  savePracticeSession,
+  type PracticeAnswer,
+  type PracticeSessionState,
+} from '@/lib/practiceSessionStorage';
 
-type TestSession = Tables<'test_sessions'>;
 type TestLibrary = Tables<'test_library'>;
 type TestQuestion = Tables<'test_questions'>;
-
-interface Answer {
-  questionId: string;
-  answer: string;
-  flagged?: boolean;
-}
 
 export default function PracticeSession() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -33,11 +32,11 @@ export default function PracticeSession() {
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
-  const [session, setSession] = useState<TestSession | null>(null);
+  const [session, setSession] = useState<PracticeSessionState | null>(null);
   const [test, setTest] = useState<TestLibrary | null>(null);
   const [questions, setQuestions] = useState<TestQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Answer[]>([]);
+  const [answers, setAnswers] = useState<PracticeAnswer[]>([]);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
@@ -59,9 +58,10 @@ export default function PracticeSession() {
     };
   }, []);
 
-  // Load session data
+  // Load local session + fetch test/questions
   useEffect(() => {
     loadSessionData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
   // Timer
@@ -84,39 +84,43 @@ export default function PracticeSession() {
 
   const loadSessionData = async () => {
     if (!sessionId) {
-      navigate('/dashboard');
+      navigate('/practice', { replace: true });
+      return;
+    }
+
+    const local = loadPracticeSession(sessionId);
+    if (!local) {
+      navigate('/practice', { replace: true });
+      return;
+    }
+
+    if (local.status === 'completed') {
+      navigate(`/practice/results/${sessionId}`, { replace: true });
       return;
     }
 
     try {
-      // Fetch session
-      const { data: sessionData, error: sessionError } = await supabase
-        .from('test_sessions')
-        .select('*')
-        .eq('id', sessionId)
-        .single();
+      // Hydrate local session
+      const startedAtMs = new Date(local.startedAt).getTime();
+      const elapsed = Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000));
+      const remaining = Math.max(0, local.durationSeconds - elapsed);
 
-      if (sessionError) throw sessionError;
+      const hydrated: PracticeSessionState = {
+        ...local,
+        timeRemaining: remaining,
+      };
 
-      if (sessionData.status === 'completed') {
-        navigate(`/practice/results/${sessionId}`, { replace: true });
-        return;
-      }
-
-      setSession(sessionData);
-      setTimeRemaining(sessionData.time_remaining_seconds || 900);
-      setCurrentIndex(sessionData.current_question_index || 0);
-
-      // Parse existing answers
-      if (sessionData.answers && Array.isArray(sessionData.answers)) {
-        setAnswers(sessionData.answers as unknown as Answer[]);
-      }
+      setSession(hydrated);
+      setTimeRemaining(remaining);
+      setCurrentIndex(hydrated.currentIndex || 0);
+      setAnswers(Array.isArray(hydrated.answers) ? hydrated.answers : []);
+      savePracticeSession(sessionId, hydrated);
 
       // Fetch test
       const { data: testData, error: testError } = await supabase
         .from('test_library')
         .select('*')
-        .eq('id', sessionData.test_id)
+        .eq('id', hydrated.testId)
         .single();
 
       if (testError) throw testError;
@@ -126,41 +130,35 @@ export default function PracticeSession() {
       const { data: questionsData, error: questionsError } = await supabase
         .from('test_questions')
         .select('*')
-        .eq('test_id', sessionData.test_id)
+        .eq('test_id', hydrated.testId)
         .order('order_number', { ascending: true });
 
       if (questionsError) throw questionsError;
       setQuestions(questionsData || []);
-
     } catch (err) {
       console.error('Error loading session:', err);
       toast({
         title: 'Error',
-        description: 'Failed to load test session',
+        description: 'Failed to load practice test',
         variant: 'destructive',
       });
-      navigate('/dashboard');
+      navigate('/practice', { replace: true });
     } finally {
       setLoading(false);
     }
   };
 
-  const saveProgress = useCallback(async () => {
-    if (!session) return;
-
-    try {
-      await supabase
-        .from('test_sessions')
-        .update({
-          answers: answers as unknown as null,
-          current_question_index: currentIndex,
-          time_remaining_seconds: timeRemaining,
-        })
-        .eq('id', session.id);
-    } catch (err) {
-      console.error('Error saving progress:', err);
-    }
-  }, [session, answers, currentIndex, timeRemaining]);
+  const saveProgress = useCallback(() => {
+    if (!sessionId || !session) return;
+    const next: PracticeSessionState = {
+      ...session,
+      currentIndex,
+      timeRemaining,
+      answers,
+    };
+    setSession(next);
+    savePracticeSession(sessionId, next);
+  }, [answers, currentIndex, session, sessionId, timeRemaining]);
 
   // Auto-save progress
   useEffect(() => {
@@ -203,7 +201,7 @@ export default function PracticeSession() {
     setSubmitting(true);
 
     try {
-      await saveProgress();
+      saveProgress();
 
       // Calculate score
       let correctCount = 0;
@@ -218,39 +216,31 @@ export default function PracticeSession() {
         ? Math.round((correctCount / questions.length) * 100) 
         : 0;
 
-      // Update session as completed
-      await supabase
-        .from('test_sessions')
-        .update({
+      // Persist completion locally
+      if (sessionId && session) {
+        const next: PracticeSessionState = {
+          ...session,
           status: 'completed',
-          end_time: new Date().toISOString(),
-          answers: answers as unknown as null,
-        })
-        .eq('id', session?.id);
-
-      // Create test result
-      const { data: result, error: resultError } = await supabase
-        .from('test_results')
-        .insert({
-          session_id: session!.id,
-          test_id: test!.id,
-          candidate_email: 'practice@user.local',
-          score: correctCount,
-          percentage,
-          time_taken_seconds: (test!.duration_minutes * 60) - timeRemaining,
-          completed_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (resultError) throw resultError;
+          currentIndex,
+          timeRemaining,
+          answers,
+          result: {
+            score: correctCount,
+            percentage,
+            timeTakenSeconds: (test?.duration_minutes ?? 15) * 60 - timeRemaining,
+            completedAt: new Date().toISOString(),
+          },
+        };
+        setSession(next);
+        savePracticeSession(sessionId, next);
+      }
 
       // Exit fullscreen
       if (document.fullscreenElement) {
         await document.exitFullscreen();
       }
 
-      navigate(`/practice/results/${session?.id}`, { replace: true });
+      navigate(`/practice/results/${sessionId}`, { replace: true });
 
     } catch (err) {
       console.error('Error submitting test:', err);
@@ -290,7 +280,7 @@ export default function PracticeSession() {
 
   const currentQuestion = questions[currentIndex];
   const options = currentQuestion?.options as string[] | null;
-  const progress = ((currentIndex + 1) / questions.length) * 100;
+  const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
   const answeredCount = answers.filter((a) => a.answer).length;
 
   return (

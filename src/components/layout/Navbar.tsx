@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
-export function Navbar() {
+export const Navbar = React.forwardRef<HTMLElement, Record<string, never>>((_, ref) => {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,7 +46,7 @@ export function Navbar() {
   ];
 
   return (
-    <nav className="glass-nav">
+    <nav ref={ref} className="glass-nav">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <Link to={isCandidateLanding ? '/practice' : '/employer'} className="flex items-center gap-2.5 group">
@@ -164,4 +165,6 @@ export function Navbar() {
       </div>
     </nav>
   );
-}
+});
+
+Navbar.displayName = 'Navbar';
