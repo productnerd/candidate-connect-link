@@ -113,17 +113,6 @@ export default function Auth() {
           </div>
         )}
 
-        {/* For candidates, show a simple back link instead of toggle */}
-        {!isEmployer && (
-          <div className="w-full max-w-md mb-6">
-            <Link
-              to="/candidate"
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              ← Back to Practice
-            </Link>
-          </div>
-        )}
 
         <div className="w-full max-w-md">
           <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
