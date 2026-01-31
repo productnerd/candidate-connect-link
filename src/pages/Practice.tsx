@@ -196,8 +196,8 @@ export default function Practice() {
                 variant="secondary"
                 onClick={() => setShowBundleModal(true)}
               >
-                <Sparkles className="h-4 w-4" />
                 Unlimited Premium Tests €14
+                <Sparkles className="h-4 w-4" />
               </Button>
             </div>
           </div>
