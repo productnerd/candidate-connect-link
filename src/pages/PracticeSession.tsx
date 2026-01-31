@@ -1,0 +1,478 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  Loader2, 
+  Clock, 
+  ChevronLeft, 
+  ChevronRight, 
+  Flag,
+  CheckCircle,
+  AlertCircle
+} from 'lucide-react';
+import type { Tables } from '@/integrations/supabase/types';
+
+type TestSession = Tables<'test_sessions'>;
+type TestLibrary = Tables<'test_library'>;
+type TestQuestion = Tables<'test_questions'>;
+
+interface Answer {
+  questionId: string;
+  answer: string;
+  flagged?: boolean;
+}
+
+export default function PracticeSession() {
+  const { sessionId } = useParams<{ sessionId: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<TestSession | null>(null);
+  const [test, setTest] = useState<TestLibrary | null>(null);
+  const [questions, setQuestions] = useState<TestQuestion[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [answers, setAnswers] = useState<Answer[]>([]);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Fullscreen management
+  useEffect(() => {
+    const enterFullscreen = async () => {
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch (err) {
+        console.log('Fullscreen not available');
+      }
+    };
+    enterFullscreen();
+
+    return () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+    };
+  }, []);
+
+  // Load session data
+  useEffect(() => {
+    loadSessionData();
+  }, [sessionId]);
+
+  // Timer
+  useEffect(() => {
+    if (timeRemaining <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleSubmit();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeRemaining]);
+
+  const loadSessionData = async () => {
+    if (!sessionId) {
+      navigate('/dashboard');
+      return;
+    }
+
+    try {
+      // Fetch session
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('test_sessions')
+        .select('*')
+        .eq('id', sessionId)
+        .single();
+
+      if (sessionError) throw sessionError;
+
+      if (sessionData.status === 'completed') {
+        navigate(`/practice/results/${sessionId}`, { replace: true });
+        return;
+      }
+
+      setSession(sessionData);
+      setTimeRemaining(sessionData.time_remaining_seconds || 900);
+      setCurrentIndex(sessionData.current_question_index || 0);
+
+      // Parse existing answers
+      if (sessionData.answers && Array.isArray(sessionData.answers)) {
+        setAnswers(sessionData.answers as unknown as Answer[]);
+      }
+
+      // Fetch test
+      const { data: testData, error: testError } = await supabase
+        .from('test_library')
+        .select('*')
+        .eq('id', sessionData.test_id)
+        .single();
+
+      if (testError) throw testError;
+      setTest(testData);
+
+      // Fetch questions
+      const { data: questionsData, error: questionsError } = await supabase
+        .from('test_questions')
+        .select('*')
+        .eq('test_id', sessionData.test_id)
+        .order('order_number', { ascending: true });
+
+      if (questionsError) throw questionsError;
+      setQuestions(questionsData || []);
+
+    } catch (err) {
+      console.error('Error loading session:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to load test session',
+        variant: 'destructive',
+      });
+      navigate('/dashboard');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveProgress = useCallback(async () => {
+    if (!session) return;
+
+    try {
+      await supabase
+        .from('test_sessions')
+        .update({
+          answers: answers as unknown as null,
+          current_question_index: currentIndex,
+          time_remaining_seconds: timeRemaining,
+        })
+        .eq('id', session.id);
+    } catch (err) {
+      console.error('Error saving progress:', err);
+    }
+  }, [session, answers, currentIndex, timeRemaining]);
+
+  // Auto-save progress
+  useEffect(() => {
+    const interval = setInterval(saveProgress, 30000); // Every 30 seconds
+    return () => clearInterval(interval);
+  }, [saveProgress]);
+
+  const handleAnswer = (answer: string) => {
+    const currentQuestion = questions[currentIndex];
+    if (!currentQuestion) return;
+
+    setAnswers((prev) => {
+      const existing = prev.findIndex((a) => a.questionId === currentQuestion.id);
+      if (existing >= 0) {
+        const updated = [...prev];
+        updated[existing] = { ...updated[existing], answer };
+        return updated;
+      }
+      return [...prev, { questionId: currentQuestion.id, answer }];
+    });
+  };
+
+  const toggleFlag = () => {
+    const currentQuestion = questions[currentIndex];
+    if (!currentQuestion) return;
+
+    setAnswers((prev) => {
+      const existing = prev.findIndex((a) => a.questionId === currentQuestion.id);
+      if (existing >= 0) {
+        const updated = [...prev];
+        updated[existing] = { ...updated[existing], flagged: !updated[existing].flagged };
+        return updated;
+      }
+      return [...prev, { questionId: currentQuestion.id, answer: '', flagged: true }];
+    });
+  };
+
+  const handleSubmit = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+
+    try {
+      await saveProgress();
+
+      // Calculate score
+      let correctCount = 0;
+      questions.forEach((q) => {
+        const answer = answers.find((a) => a.questionId === q.id);
+        if (answer && answer.answer === q.correct_answer) {
+          correctCount++;
+        }
+      });
+
+      const percentage = questions.length > 0 
+        ? Math.round((correctCount / questions.length) * 100) 
+        : 0;
+
+      // Update session as completed
+      await supabase
+        .from('test_sessions')
+        .update({
+          status: 'completed',
+          end_time: new Date().toISOString(),
+          answers: answers as unknown as null,
+        })
+        .eq('id', session?.id);
+
+      // Create test result
+      const { data: result, error: resultError } = await supabase
+        .from('test_results')
+        .insert({
+          session_id: session!.id,
+          test_id: test!.id,
+          candidate_email: 'practice@user.local',
+          score: correctCount,
+          percentage,
+          time_taken_seconds: (test!.duration_minutes * 60) - timeRemaining,
+          completed_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (resultError) throw resultError;
+
+      // Exit fullscreen
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+
+      navigate(`/practice/results/${session?.id}`, { replace: true });
+
+    } catch (err) {
+      console.error('Error submitting test:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to submit test. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getCurrentAnswer = () => {
+    const currentQuestion = questions[currentIndex];
+    if (!currentQuestion) return null;
+    return answers.find((a) => a.questionId === currentQuestion.id);
+  };
+
+  const isCurrentFlagged = () => {
+    return getCurrentAnswer()?.flagged || false;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const currentQuestion = questions[currentIndex];
+  const options = currentQuestion?.options as string[] | null;
+  const progress = ((currentIndex + 1) / questions.length) * 100;
+  const answeredCount = answers.filter((a) => a.answer).length;
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-card border-b px-4 py-3">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Badge variant="outline" className="font-mono">
+              Practice Mode
+            </Badge>
+            <span className="text-sm text-muted-foreground">
+              {answeredCount}/{questions.length} answered
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className={`flex items-center gap-2 font-mono text-lg ${timeRemaining < 60 ? 'text-destructive animate-pulse' : ''}`}>
+              <Clock className="h-5 w-5" />
+              {formatTime(timeRemaining)}
+            </div>
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={handleSubmit}
+              disabled={submitting}
+            >
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit'}
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Progress */}
+      <div className="px-4 py-2 bg-muted/30">
+        <div className="max-w-4xl mx-auto">
+          <Progress value={progress} className="h-2" />
+        </div>
+      </div>
+
+      {/* Question */}
+      <main className="flex-1 px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <Card>
+            <CardContent className="pt-6">
+              {/* Question Header */}
+              <div className="flex items-center justify-between mb-6">
+                <span className="text-sm font-medium text-muted-foreground">
+                  Question {currentIndex + 1} of {questions.length}
+                </span>
+                <Button
+                  variant={isCurrentFlagged() ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={toggleFlag}
+                >
+                  <Flag className={`h-4 w-4 mr-1 ${isCurrentFlagged() ? 'fill-current' : ''}`} />
+                  {isCurrentFlagged() ? 'Flagged' : 'Flag'}
+                </Button>
+              </div>
+
+              {/* Question Text */}
+              <div className="mb-8">
+                <p className="text-xl font-medium leading-relaxed">
+                  {currentQuestion?.question_text}
+                </p>
+              </div>
+
+              {/* Options */}
+              {currentQuestion?.question_type === 'multiple_choice' && options && (
+                <div className="space-y-3">
+                  {options.map((option, idx) => {
+                    const isSelected = getCurrentAnswer()?.answer === option;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => handleAnswer(option)}
+                        className={`w-full p-4 rounded-lg border text-left transition-all ${
+                          isSelected
+                            ? 'border-primary bg-primary/10 ring-2 ring-primary'
+                            : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                            isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground'
+                          }`}>
+                            {isSelected && <CheckCircle className="h-4 w-4" />}
+                          </div>
+                          <span>{option}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* True/False */}
+              {currentQuestion?.question_type === 'true_false' && (
+                <div className="flex gap-4">
+                  {['True', 'False'].map((option) => {
+                    const isSelected = getCurrentAnswer()?.answer === option;
+                    return (
+                      <button
+                        key={option}
+                        onClick={() => handleAnswer(option)}
+                        className={`flex-1 p-4 rounded-lg border text-center transition-all ${
+                          isSelected
+                            ? 'border-primary bg-primary/10 ring-2 ring-primary'
+                            : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Navigation */}
+          <div className="flex items-center justify-between mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
+              disabled={currentIndex === 0}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Previous
+            </Button>
+
+            {/* Question Navigator */}
+            <div className="hidden md:flex items-center gap-1 flex-wrap justify-center max-w-md">
+              {questions.map((_, idx) => {
+                const answer = answers.find((a) => a.questionId === questions[idx].id);
+                const isAnswered = !!answer?.answer;
+                const isFlagged = answer?.flagged;
+                const isCurrent = idx === currentIndex;
+
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentIndex(idx)}
+                    className={`w-8 h-8 rounded text-xs font-medium transition-all ${
+                      isCurrent
+                        ? 'bg-primary text-primary-foreground'
+                        : isFlagged
+                        ? 'bg-warning text-warning-foreground'
+                        : isAnswered
+                        ? 'bg-success/20 text-success border border-success/30'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
+                  >
+                    {idx + 1}
+                  </button>
+                );
+              })}
+            </div>
+
+            <Button
+              variant={currentIndex === questions.length - 1 ? 'default' : 'outline'}
+              onClick={() => {
+                if (currentIndex === questions.length - 1) {
+                  handleSubmit();
+                } else {
+                  setCurrentIndex((i) => Math.min(questions.length - 1, i + 1));
+                }
+              }}
+              disabled={submitting}
+            >
+              {currentIndex === questions.length - 1 ? (
+                submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit'
+              ) : (
+                <>
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
