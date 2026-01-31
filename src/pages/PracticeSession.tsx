@@ -13,7 +13,7 @@ import {
   ChevronRight, 
   Flag,
   CheckCircle,
-  AlertCircle
+  ArrowLeft
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 import {
@@ -39,24 +39,6 @@ export default function PracticeSession() {
   const [answers, setAnswers] = useState<PracticeAnswer[]>([]);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-
-  // Fullscreen management
-  useEffect(() => {
-    const enterFullscreen = async () => {
-      try {
-        await document.documentElement.requestFullscreen();
-      } catch (err) {
-        console.log('Fullscreen not available');
-      }
-    };
-    enterFullscreen();
-
-    return () => {
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
-      }
-    };
-  }, []);
 
   // Load local session + fetch test/questions
   useEffect(() => {
@@ -234,12 +216,6 @@ export default function PracticeSession() {
         setSession(next);
         savePracticeSession(sessionId, next);
       }
-
-      // Exit fullscreen
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
-      }
-
       navigate(`/candidate/results/${sessionId}`, { replace: true });
 
     } catch (err) {
@@ -289,10 +265,18 @@ export default function PracticeSession() {
       <header className="sticky top-0 z-50 bg-card border-b px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/practice')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Exit
+            </Button>
             <Badge variant="outline" className="font-mono">
               Practice Mode
             </Badge>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm text-muted-foreground hidden sm:inline">
               {answeredCount}/{questions.length} answered
             </span>
           </div>
@@ -403,14 +387,17 @@ export default function PracticeSession() {
 
           {/* Navigation */}
           <div className="flex items-center justify-between mt-6">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
-              disabled={currentIndex === 0}
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Previous
-            </Button>
+            {currentIndex > 0 ? (
+              <Button
+                variant="outline"
+                onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
+              </Button>
+            ) : (
+              <div /> 
+            )}
 
             {/* Question Navigator */}
             <div className="hidden md:flex items-center gap-1 flex-wrap justify-center max-w-md">
