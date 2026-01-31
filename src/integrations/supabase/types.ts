@@ -262,58 +262,95 @@ export type Database = {
         }
         Relationships: []
       }
-      test_questions: {
+      test_question_links: {
         Row: {
-          correct_answer: string
           created_at: string | null
-          difficulty: string | null
-          explanation: string | null
           id: string
-          options: Json | null
           order_number: number
-          points: number | null
-          question_text: string
-          question_type: Database["public"]["Enums"]["question_type"]
+          question_id: string
           test_id: string
-          time_limit_seconds: number | null
         }
         Insert: {
-          correct_answer: string
           created_at?: string | null
-          difficulty?: string | null
-          explanation?: string | null
           id?: string
-          options?: Json | null
           order_number: number
-          points?: number | null
-          question_text: string
-          question_type?: Database["public"]["Enums"]["question_type"]
+          question_id: string
           test_id: string
-          time_limit_seconds?: number | null
         }
         Update: {
-          correct_answer?: string
           created_at?: string | null
-          difficulty?: string | null
-          explanation?: string | null
           id?: string
-          options?: Json | null
           order_number?: number
-          points?: number | null
-          question_text?: string
-          question_type?: Database["public"]["Enums"]["question_type"]
+          question_id?: string
           test_id?: string
-          time_limit_seconds?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "test_questions_test_id_fkey"
+            foreignKeyName: "test_question_links_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "test_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_question_links_test_id_fkey"
             columns: ["test_id"]
             isOneToOne: false
             referencedRelation: "test_library"
             referencedColumns: ["id"]
           },
         ]
+      }
+      test_questions: {
+        Row: {
+          category: Database["public"]["Enums"]["question_category"]
+          correct_answer: string
+          created_at: string | null
+          difficulty: string | null
+          explanation: string | null
+          id: string
+          image_url: string | null
+          options: Json | null
+          order_number: number
+          points: number | null
+          pool: Database["public"]["Enums"]["question_pool"] | null
+          question_text: string
+          question_type: Database["public"]["Enums"]["question_type"]
+          time_limit_seconds: number | null
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["question_category"]
+          correct_answer: string
+          created_at?: string | null
+          difficulty?: string | null
+          explanation?: string | null
+          id?: string
+          image_url?: string | null
+          options?: Json | null
+          order_number: number
+          points?: number | null
+          pool?: Database["public"]["Enums"]["question_pool"] | null
+          question_text: string
+          question_type?: Database["public"]["Enums"]["question_type"]
+          time_limit_seconds?: number | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["question_category"]
+          correct_answer?: string
+          created_at?: string | null
+          difficulty?: string | null
+          explanation?: string | null
+          id?: string
+          image_url?: string | null
+          options?: Json | null
+          order_number?: number
+          points?: number | null
+          pool?: Database["public"]["Enums"]["question_pool"] | null
+          question_text?: string
+          question_type?: Database["public"]["Enums"]["question_type"]
+          time_limit_seconds?: number | null
+        }
+        Relationships: []
       }
       test_results: {
         Row: {
@@ -324,8 +361,6 @@ export type Database = {
           id: string
           invitation_id: string | null
           organization_id: string | null
-          percentage: number
-          percentile: number | null
           question_breakdown: Json | null
           score: number
           session_id: string
@@ -340,8 +375,6 @@ export type Database = {
           id?: string
           invitation_id?: string | null
           organization_id?: string | null
-          percentage: number
-          percentile?: number | null
           question_breakdown?: Json | null
           score: number
           session_id: string
@@ -356,8 +389,6 @@ export type Database = {
           id?: string
           invitation_id?: string | null
           organization_id?: string | null
-          percentage?: number
-          percentile?: number | null
           question_breakdown?: Json | null
           score?: number
           session_id?: string
@@ -522,6 +553,8 @@ export type Database = {
       bundle_type: "starter" | "professional" | "enterprise"
       invitation_status: "pending" | "started" | "completed" | "expired"
       organization_size: "startup" | "smb" | "midmarket" | "enterprise"
+      question_category: "math_logic" | "verbal_reasoning" | "spatial_reasoning"
+      question_pool: "basic" | "premium" | "official"
       question_type: "multiple_choice" | "true_false" | "short_answer"
       session_status: "in_progress" | "completed" | "abandoned"
       test_category: "cognitive" | "personality" | "skills" | "situational"
@@ -656,6 +689,12 @@ export const Constants = {
       bundle_type: ["starter", "professional", "enterprise"],
       invitation_status: ["pending", "started", "completed", "expired"],
       organization_size: ["startup", "smb", "midmarket", "enterprise"],
+      question_category: [
+        "math_logic",
+        "verbal_reasoning",
+        "spatial_reasoning",
+      ],
+      question_pool: ["basic", "premium", "official"],
       question_type: ["multiple_choice", "true_false", "short_answer"],
       session_status: ["in_progress", "completed", "abandoned"],
       test_category: ["cognitive", "personality", "skills", "situational"],
