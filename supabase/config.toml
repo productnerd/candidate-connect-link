@@ -1,5 +1,11 @@
 project_id = "lrftnnabmtidwmtomwoh"
 
+[functions.validate-invitation]
+verify_jwt = false
+
+[functions.start-invited-test]
+verify_jwt = false
+
 [functions.send-test-invitation]
 verify_jwt = false
 
