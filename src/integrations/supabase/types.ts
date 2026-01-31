@@ -150,7 +150,7 @@ export type Database = {
           invited_by: string | null
           inviter_email: string | null
           inviter_name: string | null
-          organization_id: string
+          organization_id: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["invitation_status"] | null
           test_id: string
@@ -169,7 +169,7 @@ export type Database = {
           invited_by?: string | null
           inviter_email?: string | null
           inviter_name?: string | null
-          organization_id: string
+          organization_id?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["invitation_status"] | null
           test_id: string
@@ -188,7 +188,7 @@ export type Database = {
           invited_by?: string | null
           inviter_email?: string | null
           inviter_name?: string | null
-          organization_id?: string
+          organization_id?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["invitation_status"] | null
           test_id?: string

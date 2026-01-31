@@ -12,6 +12,7 @@ import AuthCallback from "./pages/AuthCallback";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import SendInvitation from "./pages/SendInvitation";
+import SendTest from "./pages/SendTest";
 import TestLibrary from "./pages/TestLibrary";
 import Practice from "./pages/Practice";
 import StartPracticeTest from "./pages/StartPracticeTest";
@@ -44,6 +45,9 @@ const App = () => (
             <Route path="/auth/:role" element={<Auth />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
+            
+            {/* Anonymous send test flow (no auth required) */}
+            <Route path="/send-test" element={<SendTest />} />
             
             {/* Candidate practice test flow (doesn't require auth) */}
             <Route path="/candidate/start" element={<StartPracticeTest />} />

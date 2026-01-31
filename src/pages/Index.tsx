@@ -101,7 +101,7 @@ export default function Index() {
             {/* CTA Buttons - Send Test and Try Test */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="rounded-2xl px-8 h-14 text-base shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" asChild>
-                <Link to="/auth/employer">
+                <Link to="/send-test">
                   Send Test
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
@@ -272,7 +272,7 @@ export default function Index() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="rounded-2xl px-8 h-14 bg-background text-foreground hover:bg-background/90 shadow-xl" asChild>
-              <Link to="/auth/employer">
+              <Link to="/send-test">
                 Send Test
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
