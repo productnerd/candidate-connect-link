@@ -22,6 +22,68 @@ interface BasicInvitationEmailRequest {
   baseUrl: string;
 }
 
+// Input validation function
+function validateInput(data: BasicInvitationEmailRequest): string | null {
+  // Email validation regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  
+  // Validate email formats
+  if (!data.candidateEmail || !emailRegex.test(data.candidateEmail)) {
+    return 'Invalid candidate email format';
+  }
+  if (!data.inviterEmail || !emailRegex.test(data.inviterEmail)) {
+    return 'Invalid inviter email format';
+  }
+  
+  // Length validation for names (2-100 characters)
+  if (!data.candidateName || data.candidateName.length < 2 || data.candidateName.length > 100) {
+    return 'Candidate name must be 2-100 characters';
+  }
+  if (!data.inviterName || data.inviterName.length < 2 || data.inviterName.length > 100) {
+    return 'Inviter name must be 2-100 characters';
+  }
+  
+  // Company name validation (2-200 characters)
+  if (!data.companyName || data.companyName.length < 2 || data.companyName.length > 200) {
+    return 'Company name must be 2-200 characters';
+  }
+  
+  // Test name validation
+  if (!data.testName || data.testName.length < 1 || data.testName.length > 200) {
+    return 'Test name must be 1-200 characters';
+  }
+  
+  // Token validation
+  if (!data.invitationToken || data.invitationToken.length < 16) {
+    return 'Invalid invitation token';
+  }
+  
+  // Base URL validation
+  if (!data.baseUrl) {
+    return 'Base URL is required';
+  }
+  
+  // Check for suspicious patterns (HTML/script injection)
+  const suspiciousPatterns = /<script|<iframe|javascript:|on\w+=/i;
+  if (suspiciousPatterns.test(data.candidateName) || 
+      suspiciousPatterns.test(data.inviterName) || 
+      suspiciousPatterns.test(data.companyName)) {
+    return 'Invalid characters detected in input';
+  }
+  
+  return null;
+}
+
+// Sanitize string to prevent XSS
+function sanitizeString(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -30,6 +92,18 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     console.log("Received send-basic-test-invitation request");
+
+    const requestData: BasicInvitationEmailRequest = await req.json();
+
+    // Server-side input validation
+    const validationError = validateInput(requestData);
+    if (validationError) {
+      console.error("Validation error:", validationError);
+      return new Response(
+        JSON.stringify({ error: validationError }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const {
       candidateEmail,
@@ -41,16 +115,61 @@ const handler = async (req: Request): Promise<Response> => {
       invitationToken,
       expiresAt,
       baseUrl,
-    }: BasicInvitationEmailRequest = await req.json();
+    } = requestData;
 
-    // Validate required fields
-    if (!candidateEmail || !candidateName || !testName || !invitationToken || !baseUrl || !inviterEmail) {
-      console.error("Missing required fields");
+    // Initialize Supabase client for rate limit checks
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Check daily sender limit (3 tests per day)
+    const { data: canSend, error: limitError } = await supabase.rpc('check_sender_daily_limit', {
+      sender_email: inviterEmail.toLowerCase().trim()
+    });
+
+    if (limitError) {
+      console.error("Error checking sender limit:", limitError);
       return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Unable to verify sender limits" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    if (!canSend) {
+      console.log("Sender daily limit reached:", inviterEmail);
+      return new Response(
+        JSON.stringify({ error: "Daily limit reached (3 tests per day). Please try again tomorrow." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check candidate cooldown (30 days between invites to same candidate from same sender)
+    const { data: noCooldown, error: cooldownError } = await supabase.rpc('check_candidate_cooldown', {
+      sender_email: inviterEmail.toLowerCase().trim(),
+      recipient_email: candidateEmail.toLowerCase().trim()
+    });
+
+    if (cooldownError) {
+      console.error("Error checking cooldown:", cooldownError);
+      return new Response(
+        JSON.stringify({ error: "Unable to verify candidate cooldown" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!noCooldown) {
+      console.log("Candidate cooldown active:", candidateEmail);
+      return new Response(
+        JSON.stringify({ error: "This candidate was already invited recently. Please wait 30 days before sending another invitation." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Sanitize inputs for HTML email
+    const safeCandidateName = sanitizeString(candidateName.trim());
+    const safeInviterName = sanitizeString(inviterName.trim());
+    const safeCompanyName = sanitizeString(companyName.trim());
+    const safeTestName = sanitizeString(testName);
 
     const testUrl = `${baseUrl}/test/${invitationToken}`;
     const expirationDate = new Date(expiresAt).toLocaleDateString("en-US", {
@@ -66,7 +185,7 @@ const handler = async (req: Request): Promise<Response> => {
     const candidateEmailResponse = await resend.emails.send({
       from: "Assessments <onboarding@resend.dev>",
       to: [candidateEmail],
-      subject: `${inviterName} from ${companyName} invited you to take an assessment`,
+      subject: `${safeInviterName} from ${safeCompanyName} invited you to take an assessment`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -86,11 +205,11 @@ const handler = async (req: Request): Promise<Response> => {
             <!-- Content -->
             <div style="padding: 32px;">
               <p style="color: #27272a; font-size: 16px; line-height: 1.6; margin: 0 0 16px;">
-                Hi ${candidateName},
+                Hi ${safeCandidateName},
               </p>
               
               <p style="color: #52525b; font-size: 15px; line-height: 1.6; margin: 0 0 24px;">
-                <strong>${inviterName}</strong> from <strong>${companyName}</strong> has invited you to complete an assessment as part of their hiring process.
+                <strong>${safeInviterName}</strong> from <strong>${safeCompanyName}</strong> has invited you to complete an assessment as part of their hiring process.
               </p>
               
               <!-- Test Info Box -->
@@ -99,7 +218,7 @@ const handler = async (req: Request): Promise<Response> => {
                   Assessment
                 </p>
                 <p style="color: #27272a; font-size: 18px; font-weight: 600; margin: 0;">
-                  ${testName}
+                  ${safeTestName}
                 </p>
               </div>
               
@@ -143,7 +262,7 @@ const handler = async (req: Request): Promise<Response> => {
     const inviterEmailResponse = await resend.emails.send({
       from: "Assessments <onboarding@resend.dev>",
       to: [inviterEmail],
-      subject: `Test invitation sent to ${candidateName}`,
+      subject: `Test invitation sent to ${safeCandidateName}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -163,7 +282,7 @@ const handler = async (req: Request): Promise<Response> => {
             <!-- Content -->
             <div style="padding: 32px;">
               <p style="color: #27272a; font-size: 16px; line-height: 1.6; margin: 0 0 16px;">
-                Hi ${inviterName},
+                Hi ${safeInviterName},
               </p>
               
               <p style="color: #52525b; font-size: 15px; line-height: 1.6; margin: 0 0 24px;">
@@ -174,11 +293,11 @@ const handler = async (req: Request): Promise<Response> => {
               <div style="background: #f4f4f5; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
                 <div style="margin-bottom: 12px;">
                   <p style="color: #71717a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 4px;">Candidate</p>
-                  <p style="color: #27272a; font-size: 15px; font-weight: 500; margin: 0;">${candidateName} (${candidateEmail})</p>
+                  <p style="color: #27272a; font-size: 15px; font-weight: 500; margin: 0;">${safeCandidateName}</p>
                 </div>
                 <div style="margin-bottom: 12px;">
                   <p style="color: #71717a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 4px;">Assessment</p>
-                  <p style="color: #27272a; font-size: 15px; font-weight: 500; margin: 0;">${testName}</p>
+                  <p style="color: #27272a; font-size: 15px; font-weight: 500; margin: 0;">${safeTestName}</p>
                 </div>
                 <div>
                   <p style="color: #71717a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 4px;">Expires</p>
@@ -223,7 +342,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in send-basic-test-invitation function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "An error occurred while processing your request" }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
