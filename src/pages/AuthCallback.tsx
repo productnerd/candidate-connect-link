@@ -72,17 +72,13 @@ export default function AuthCallback() {
 
       if (profileError || !profile) {
         console.error('Profile fetch error:', profileError);
-        // Default to candidate dashboard if profile not found
-        navigate('/dashboard/candidate', { replace: true });
+        // Default to dashboard if profile not found
+        navigate('/dashboard', { replace: true });
         return;
       }
 
-      // Redirect based on role
-      if (profile.role === 'employer' || profile.role === 'admin') {
-        navigate('/dashboard/employer', { replace: true });
-      } else {
-        navigate('/dashboard/candidate', { replace: true });
-      }
+      // Always redirect to /dashboard - Dashboard component handles role-based display
+      navigate('/dashboard', { replace: true });
     };
 
     handleAuthCallback();

@@ -21,6 +21,7 @@ import PracticeResults from "./pages/PracticeResults";
 import TakeTest from "./pages/TakeTest";
 import TestSession from "./pages/TestSession";
 import TestResults from "./pages/TestResults";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,9 @@ const App = () => (
             
             {/* Anonymous send test flow (no auth required) */}
             <Route path="/send-test" element={<SendTest />} />
+            
+            {/* Payment success page */}
+            <Route path="/payment-success" element={<PaymentSuccess />} />
             
             {/* Practice landing (alias for /candidate) */}
             <Route path="/practice" element={<Practice />} />

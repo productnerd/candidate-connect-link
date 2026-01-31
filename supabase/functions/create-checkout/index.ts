@@ -17,6 +17,22 @@ const PRICE_IDS = {
   employer_500: "price_1SvioVLTUhE4HGAAKPZamoy7",
 };
 
+// Bundle display names
+const BUNDLE_NAMES: Record<string, string> = {
+  candidate_unlimited: "Unlimited Practice Tests",
+  employer_30: "30 Test Bundle",
+  employer_100: "100 Test Bundle",
+  employer_500: "500 Test Bundle",
+};
+
+// Bundle prices for email
+const BUNDLE_PRICES: Record<string, string> = {
+  candidate_unlimited: "€14",
+  employer_30: "€9",
+  employer_100: "€29",
+  employer_500: "€79",
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -66,10 +82,12 @@ serve(async (req) => {
 
     // Determine success/cancel URLs based on bundle type
     const origin = req.headers.get("origin") || "https://lovable.dev";
+    
+    // Success URL now goes to payment-success page with parameters
+    // We'll use Stripe's checkout.session.completed event data to populate the email
+    const successUrl = `${origin}/payment-success?bundle_type=${bundle_type}&session_id={CHECKOUT_SESSION_ID}`;
+    
     const isEmployer = bundle_type.startsWith("employer_");
-    const successUrl = isEmployer 
-      ? `${origin}/employer?payment=success`
-      : `${origin}/candidate?payment=success`;
     const cancelUrl = isEmployer 
       ? `${origin}/employer?payment=cancelled`
       : `${origin}/candidate?payment=cancelled`;
@@ -101,9 +119,15 @@ serve(async (req) => {
         bundle_type,
         tests: bundleInfo.tests?.toString() || "unlimited",
       },
+      // Enable email collection for guest checkout
+      customer_creation: customerId ? undefined : "always",
     });
 
     console.log("Checkout session created:", session.id);
+
+    // Send confirmation email in the background after successful session creation
+    // Note: This is a pre-payment email. For post-payment email, we'd need a webhook
+    // But we can send the email with signup link after payment via the success page
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
