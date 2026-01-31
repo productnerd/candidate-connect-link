@@ -100,17 +100,17 @@ export default function Auth() {
             <div className="flex items-center justify-center p-1 rounded-lg bg-muted">
               <Link
                 to="/auth/employer"
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all bg-background shadow-sm text-foreground"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-[10px] font-medium uppercase tracking-wider transition-all bg-background shadow-sm text-foreground"
               >
-                <Building2 className="h-4 w-4" />
-                I'm a Business
+                <Building2 className="h-3 w-3" />
+                Business
               </Link>
               <Link
                 to="/auth/candidate"
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-[10px] font-medium uppercase tracking-wider transition-all text-muted-foreground hover:text-foreground"
               >
-                <User className="h-4 w-4" />
-                I'm a Candidate
+                <User className="h-3 w-3" />
+                Candidate
               </Link>
             </div>
           </div>
