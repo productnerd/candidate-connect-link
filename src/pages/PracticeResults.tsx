@@ -130,7 +130,7 @@ export default function PracticeResults() {
         <Card className="mb-6">
           <CardContent className="pt-6">
             <div className="text-center mb-6">
-              <div className={`text-6xl font-display font-bold mb-2 ${getScoreColor(result.percentage)}`}>
+              <div className={`text-[10rem] leading-none font-display font-bold mb-2 ${getScoreColor(result.percentage)}`}>
                 {result.percentage}%
               </div>
               <Badge variant="secondary" className="text-lg px-4 py-1">
