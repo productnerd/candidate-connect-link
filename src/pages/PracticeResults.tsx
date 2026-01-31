@@ -158,8 +158,11 @@ export default function PracticeResults() {
           <CardContent className="pt-6">
             <div className="text-center mb-6">
               <div className={`text-[10rem] leading-none font-display font-bold mb-2 ${getScoreColor(result.percentage)}`}>
-                {displayedScore}%
+                {result.score}/{test.question_count}
               </div>
+              <p className="text-muted-foreground mb-2">
+                {displayedScore}% accuracy
+              </p>
               <Badge variant="secondary" className="text-lg px-4 py-1">
                 {getScoreLabel(result.percentage)}
               </Badge>
