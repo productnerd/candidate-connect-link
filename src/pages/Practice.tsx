@@ -16,6 +16,7 @@ import {
   Gift,
   Crown
 } from 'lucide-react';
+import candidateHeroBg from '@/assets/candidate-hero-bg.png';
 
 export default function Practice() {
   const benefits = [
@@ -123,9 +124,18 @@ export default function Practice() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      {/* Hero Section */}
-      <section className="relative py-20 lg:py-28 overflow-hidden bg-hero-pattern">
-        <div className="container relative z-10">
+      {/* Hero Section - Full Screen with Background Image */}
+      <section className="relative min-h-screen flex flex-col pt-16">
+        {/* Background image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${candidateHeroBg})` }}
+        />
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-foreground/50" />
+        
+        {/* Main Hero Content */}
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4">
           <div className="max-w-3xl mx-auto text-center text-primary-foreground">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-sm mb-6">
               <Sparkles className="h-4 w-4" />
@@ -155,10 +165,6 @@ export default function Practice() {
             </div>
           </div>
         </div>
-
-        {/* Decorative elements */}
-        <div className="absolute top-20 left-10 w-72 h-72 rounded-full bg-primary/20 blur-3xl"></div>
-        <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-accent/10 blur-3xl"></div>
       </section>
 
       {/* Benefits Section */}
