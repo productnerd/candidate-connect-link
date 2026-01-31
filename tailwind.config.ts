@@ -85,12 +85,12 @@ export default {
         "3xl": "calc(var(--radius) + 12px)",
       },
       boxShadow: {
-        glass: "0 8px 32px 0 rgba(31, 38, 135, 0.15)",
-        "glass-hover": "0 12px 40px 0 rgba(31, 38, 135, 0.25)",
+        glass: "0 8px 32px 0 rgba(0, 0, 0, 0.08)",
+        "glass-hover": "0 12px 40px 0 rgba(0, 0, 0, 0.12)",
         "glass-inset": "inset 0 1px 1px 0 rgba(255, 255, 255, 0.5)",
-        "3d": "0 25px 50px -12px rgba(0, 0, 0, 0.15)",
-        glow: "0 0 40px hsl(262 83% 58% / 0.25)",
-        "glow-accent": "0 0 40px hsl(190 95% 45% / 0.25)",
+        "3d": "0 25px 50px -12px rgba(0, 0, 0, 0.1)",
+        glow: "0 0 40px hsl(11 90% 62% / 0.25)",
+        "glow-accent": "0 0 40px hsl(11 90% 62% / 0.25)",
       },
       backdropBlur: {
         glass: "20px",
