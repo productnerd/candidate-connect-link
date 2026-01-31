@@ -45,24 +45,26 @@ export function Navbar() {
   ];
 
   return (
-    <nav className="absolute top-0 left-0 right-0 z-50 w-full">
-      <div className="container flex h-20 items-center justify-between">
+    <nav className="glass-nav">
+      <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link to={isCandidateLanding ? '/practice' : '/employer'} className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-primary">
-            <Brain className="h-5 w-5 text-primary-foreground" />
+        <Link to={isCandidateLanding ? '/practice' : '/employer'} className="flex items-center gap-2.5 group">
+          <div className="p-2 rounded-xl bg-primary/10 border border-primary/20 backdrop-blur-sm transition-all group-hover:bg-primary/20 group-hover:scale-105">
+            <Brain className="h-5 w-5 text-primary" />
           </div>
-          <span className="text-lg font-display font-semibold text-foreground">CCAT<sup className="text-xs">™</sup></span>
+          <span className="text-lg font-display font-semibold text-foreground">
+            CCAT<sup className="text-xs text-primary">™</sup>
+          </span>
         </Link>
 
         {/* Centered Nav Pills */}
         {!user && !isCandidateLanding && (
-          <div className="hidden md:flex items-center gap-1 bg-card/80 backdrop-blur-sm rounded-full p-1.5 border border-border/50 shadow-sm">
+          <div className="hidden md:flex items-center gap-1 glass-card px-2 py-1.5">
             {navItems.map((item) => (
               <a
                 key={item.label}
                 href={item.href}
-                className="px-4 py-2 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-300"
               >
                 {item.label}
               </a>
@@ -71,11 +73,11 @@ export function Navbar() {
         )}
 
         {/* Right Side */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {user ? (
             <>
               {!isDashboard && (
-                <Button variant="ghost" size="sm" asChild>
+                <Button variant="ghost" size="sm" className="rounded-xl" asChild>
                   <Link to="/dashboard">
                     <LayoutDashboard className="h-4 w-4 mr-2" />
                     Dashboard
@@ -85,37 +87,39 @@ export function Navbar() {
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-primary text-primary-foreground">
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 overflow-hidden">
+                    <Avatar className="h-10 w-10 border-2 border-primary/20">
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-medium">
                         {getInitials(profile?.full_name)}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <div className="flex flex-col space-y-1 p-2">
+                <DropdownMenuContent className="w-56 glass-card border-0" align="end" forceMount>
+                  <div className="flex flex-col space-y-1 p-3">
                     <p className="text-sm font-medium">{profile?.full_name || 'User'}</p>
                     <p className="text-xs text-muted-foreground">{profile?.email}</p>
-                    <p className="text-xs text-primary capitalize">{profile?.role}</p>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary w-fit capitalize">
+                      {profile?.role}
+                    </span>
                   </div>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="bg-border/50" />
                   {!isDashboard && (
                     <DropdownMenuItem asChild>
-                      <Link to="/dashboard" className="cursor-pointer">
+                      <Link to="/dashboard" className="cursor-pointer rounded-lg">
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         Dashboard
                       </Link>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem asChild>
-                    <Link to="/settings" className="cursor-pointer">
+                    <Link to="/settings" className="cursor-pointer rounded-lg">
                       <User className="mr-2 h-4 w-4" />
                       Settings
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
+                  <DropdownMenuSeparator className="bg-border/50" />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive rounded-lg">
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign out
                   </DropdownMenuItem>
@@ -125,23 +129,23 @@ export function Navbar() {
           ) : (
             <div className="flex items-center gap-3">
               {/* Business / Candidate Toggle */}
-              <div className="flex items-center bg-muted/50 rounded-full p-1 border border-border/50">
+              <div className="flex items-center glass-card p-1">
                 <Link
                   to="/employer"
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
                     isEmployerLanding
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-primary/10'
                   }`}
                 >
                   Business
                 </Link>
                 <Link
                   to="/practice"
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
                     isCandidateLanding
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-primary/10'
                   }`}
                 >
                   Candidate
@@ -149,7 +153,7 @@ export function Navbar() {
               </div>
               <Link
                 to="/auth"
-                className="flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-primary transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-foreground hover:text-primary transition-all duration-300 glass-button"
               >
                 <ArrowRight className="h-4 w-4" />
                 Login
