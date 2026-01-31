@@ -261,7 +261,7 @@ export default function Index() {
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-medium mb-6 text-background">
             Ready to hire smarter?
           </h2>
-          <p className="text-lg text-background/70 mb-10 max-w-xl mx-auto">
+          <p className="text-lg text-background/90 mb-10 max-w-xl mx-auto">
             Join thousands of companies using CCAT assessments to find top talent.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
