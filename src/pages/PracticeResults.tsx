@@ -13,7 +13,8 @@ import {
   Home,
   RotateCcw,
   CheckCircle,
-  XCircle
+  XCircle,
+  CircleDashed
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 import { loadPracticeSession, type PracticeSessionState } from '@/lib/practiceSessionStorage';
@@ -128,28 +129,42 @@ export default function PracticeResults() {
               className="h-4 mb-6" 
             />
 
-            <div className="grid grid-cols-3 gap-4 text-center">
+            {/* Stats Grid - 3 columns */}
+            <div className="grid grid-cols-3 gap-4 text-center mb-4">
               <div className="p-4 bg-muted/50 rounded-lg">
                 <div className="flex items-center justify-center gap-1 text-success mb-1">
                   <CheckCircle className="h-4 w-4" />
-                  <span className="text-2xl font-bold">{result.score}</span>
+                  <span className="text-2xl font-display">{result.score}</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Correct</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">Correct</p>
               </div>
               <div className="p-4 bg-muted/50 rounded-lg">
                 <div className="flex items-center justify-center gap-1 text-destructive mb-1">
                   <XCircle className="h-4 w-4" />
-                  <span className="text-2xl font-bold">{test.question_count - result.score}</span>
+                  <span className="text-2xl font-display">
+                    {test.question_count - result.score - (test.question_count - (session?.answers?.length || 0))}
+                  </span>
                 </div>
-                <p className="text-xs text-muted-foreground">Incorrect</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">Incorrect</p>
               </div>
               <div className="p-4 bg-muted/50 rounded-lg">
                 <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                  <Clock className="h-4 w-4" />
-                <span className="text-2xl font-bold">{formatTime(result.timeTakenSeconds || 0)}</span>
+                  <CircleDashed className="h-4 w-4" />
+                  <span className="text-2xl font-display">
+                    {test.question_count - (session?.answers?.length || 0)}
+                  </span>
                 </div>
-                <p className="text-xs text-muted-foreground">Time Taken</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">Not Completed</p>
               </div>
+            </div>
+
+            {/* Time Taken - Full width */}
+            <div className="p-4 bg-muted/50 rounded-lg text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span className="text-2xl font-mono">{formatTime(result.timeTakenSeconds || 0)}</span>
+              </div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">Time Taken</p>
             </div>
           </CardContent>
         </Card>
