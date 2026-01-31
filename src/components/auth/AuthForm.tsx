@@ -146,7 +146,7 @@ export function AuthForm({ role }: AuthFormProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="login" className="w-full">
+        <Tabs defaultValue="login" className="w-full pt-4">
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="login">Sign In</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
