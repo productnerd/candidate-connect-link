@@ -127,15 +127,6 @@ export function AuthForm({ role }: AuthFormProps) {
     return (
       <Card className="w-full max-w-md shadow-xl border-0 card-elevated">
         <CardContent className="pt-6">
-          <div className="text-center mb-6">
-            <div className="inline-flex p-3 rounded-full bg-primary/10 text-primary mb-4">
-              <User className="h-6 w-6" />
-            </div>
-            <h2 className="text-xl font-semibold mb-1">Welcome back</h2>
-            <p className="text-sm text-muted-foreground">
-              Sign in to view your test results and history
-            </p>
-          </div>
 
           {error && (
             <div className="flex items-center gap-2 p-3 mb-4 text-sm rounded-lg bg-destructive/10 text-destructive">
