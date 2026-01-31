@@ -14,7 +14,7 @@ import {
   Flag,
   ArrowLeft
 } from 'lucide-react';
-import type { Tables } from '@/integrations/supabase/types';
+import type { Tables, Json } from '@/integrations/supabase/types';
 import {
   loadPracticeSession,
   savePracticeSession,
@@ -100,6 +100,29 @@ export default function PracticeSession() {
       setCurrentIndex(hydrated.currentIndex || 0);
       setAnswers(Array.isArray(hydrated.answers) ? hydrated.answers : []);
       savePracticeSession(sessionId, hydrated);
+
+      // Ensure a backend session exists for this practice run.
+      // RLS for questions requires an in-progress session row for anonymous users.
+      const { error: ensureSessionError } = await supabase
+        .from('test_sessions')
+        .upsert(
+          {
+            id: sessionId,
+            test_id: hydrated.testId,
+            session_type: 'practice',
+            status: 'in_progress',
+            candidate_id: null,
+            start_time: new Date().toISOString(),
+            current_question_index: hydrated.currentIndex || 0,
+            time_remaining_seconds: remaining,
+            answers: (Array.isArray(hydrated.answers) ? hydrated.answers : []) as unknown as Json,
+            proctoring_enabled: false,
+            proctoring_consent_given: false,
+          },
+          { onConflict: 'id' },
+        );
+
+      if (ensureSessionError) throw ensureSessionError;
 
       // Fetch test
       const { data: testData, error: testError } = await supabase
