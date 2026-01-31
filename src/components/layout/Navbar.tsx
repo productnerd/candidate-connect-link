@@ -35,7 +35,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 w-full">
       <div className="container flex h-16 items-center justify-between">
         <Link to={isCandidateLanding ? '/practice' : '/'} className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-primary">
