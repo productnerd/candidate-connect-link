@@ -139,7 +139,7 @@ export const Navbar = React.forwardRef<HTMLElement, Record<string, never>>((_, r
               </DropdownMenu>
             </>
           ) : (
-            <Button variant="default" size="sm" className="rounded-xl" asChild>
+            <Button variant="tertiary" size="sm" className="rounded-xl" asChild>
               <Link to="/auth">
                 <ArrowRight className="h-4 w-4" />
                 Login

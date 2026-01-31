@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { 
@@ -12,11 +14,22 @@ import {
   ArrowRight,
   Sparkles,
   Play,
-  Zap
+  Zap,
+  Package,
+  Building2,
+  Infinity
 } from 'lucide-react';
 import employerHeroBg from '@/assets/employer-hero-bg.png';
 
 export default function Index() {
+  const [showBundleModal, setShowBundleModal] = useState(false);
+  
+  const employerBundles = [
+    { tests: 30, price: 9, perTest: '€0.30' },
+    { tests: 100, price: 29, perTest: '€0.29', popular: true },
+    { tests: 500, price: 79, perTest: '€0.16' },
+  ];
+
   const features = [
     {
       icon: Brain,
@@ -98,7 +111,7 @@ export default function Index() {
               with AI-powered cognitive assessments.
             </p>
             
-            {/* CTA - Send Test with secondary text link */}
+            {/* CTA - Send Test with secondary button */}
             <div className="flex flex-col items-center justify-center gap-3">
               <Button variant="hero" asChild>
                 <Link to="/send-test">
@@ -106,14 +119,13 @@ export default function Index() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <a
-                href="/candidate/start"
-                target="_blank"
-                rel="noreferrer"
-                className="text-sm text-background/80 underline underline-offset-4 hover:text-background hover:scale-105 transition-all duration-200"
+              <Button 
+                variant="secondary"
+                onClick={() => setShowBundleModal(true)}
               >
-                or try the test yourself
-              </a>
+                <Package className="h-4 w-4" />
+                Purchase a Bundle
+              </Button>
             </div>
           </div>
         </div>
@@ -279,17 +291,114 @@ export default function Index() {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            <a
-              href="/candidate/start"
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm text-background/80 underline underline-offset-4 hover:text-background hover:scale-105 transition-all duration-200"
+            <Button 
+              variant="tertiary"
+              onClick={() => setShowBundleModal(true)}
             >
-              or try the test yourself
-            </a>
+              <Package className="h-4 w-4" />
+              Purchase a Bundle
+            </Button>
           </div>
         </div>
       </section>
+
+      {/* Employer Bundle Modal */}
+      <Dialog open={showBundleModal} onOpenChange={setShowBundleModal}>
+        <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-transparent border-0 shadow-none">
+          {/* Glassmorphic Card */}
+          <div className="relative">
+            {/* Background Glow Effects */}
+            <div className="absolute -inset-4 bg-gradient-to-br from-primary/30 via-primary/10 to-accent/30 rounded-3xl blur-2xl opacity-60" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-primary/40 rounded-full blur-3xl" />
+            
+            {/* Card */}
+            <div className="relative bg-card/90 backdrop-blur-xl rounded-2xl border border-primary/20 shadow-2xl shadow-primary/10 overflow-hidden">
+              {/* Header Gradient */}
+              <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-transparent px-6 pt-8 pb-6">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-primary/30 rounded-full blur-xl animate-pulse" />
+                    <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/30">
+                      <Building2 className="h-8 w-8 text-primary-foreground" />
+                    </div>
+                  </div>
+                </div>
+                <h3 className="text-2xl font-display font-bold text-center mb-1">
+                  Test Bundles
+                </h3>
+                <p className="text-center text-muted-foreground text-sm">
+                  Purchase tests in bulk and save
+                </p>
+              </div>
+
+              {/* Bundles */}
+              <div className="px-6 py-6 space-y-3">
+                {employerBundles.map((bundle, index) => (
+                  <div 
+                    key={index}
+                    className={`relative p-4 rounded-xl border transition-all cursor-pointer hover:scale-[1.02] ${
+                      bundle.popular 
+                        ? 'bg-primary/10 border-primary/30 shadow-lg shadow-primary/10' 
+                        : 'bg-muted/30 border-border/50 hover:border-primary/20'
+                    }`}
+                  >
+                    {bundle.popular && (
+                      <span className="absolute -top-2 right-4 px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-medium uppercase tracking-wider rounded-full">
+                        Best Value
+                      </span>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                          bundle.popular ? 'bg-primary/20' : 'bg-muted'
+                        }`}>
+                          <Package className={`h-5 w-5 ${bundle.popular ? 'text-primary' : 'text-muted-foreground'}`} />
+                        </div>
+                        <div>
+                          <p className="font-semibold">{bundle.tests} Tests</p>
+                          <p className="text-xs text-muted-foreground">{bundle.perTest} per test</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-display font-bold text-primary">€{bundle.price}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Features */}
+              <div className="px-6 pb-4">
+                <div className="flex flex-wrap gap-2 justify-center text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3 text-primary" />
+                    Never expires
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3 text-primary" />
+                    Full analytics
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3 text-primary" />
+                    Team access
+                  </span>
+                </div>
+              </div>
+
+              {/* CTA */}
+              <div className="px-6 pb-6">
+                <Button className="w-full h-12 text-base shadow-lg shadow-primary/20" size="lg">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Continue to Checkout
+                </Button>
+                <p className="text-center text-xs text-muted-foreground mt-3">
+                  Secure checkout • Instant access
+                </p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

@@ -25,10 +25,15 @@ const buttonVariants = cva(
           "shadow-[0_4px_16px_-4px_hsl(25_30%_10%/0.08),inset_0_2px_4px_0_hsl(38_25%_96%/0.6),inset_0_-1px_2px_0_hsl(25_30%_10%/0.02)] " +
           "hover:border-primary/40 hover:shadow-[0_8px_24px_-4px_hsl(25_30%_10%/0.12),inset_0_2px_4px_0_hsl(38_25%_96%/0.8)] hover:-translate-y-0.5",
         secondary: 
-          "relative bg-gradient-to-b from-secondary via-secondary to-secondary/80 text-secondary-foreground " +
-          "border border-foreground/5 " +
-          "shadow-[0_4px_16px_-4px_hsl(25_30%_10%/0.1),inset_0_2px_4px_0_hsl(38_25%_96%/0.5),inset_0_-2px_4px_0_hsl(25_30%_10%/0.03)] " +
-          "hover:-translate-y-0.5",
+          "relative bg-background/20 backdrop-blur-xl text-foreground/90 " +
+          "border border-foreground/10 " +
+          "shadow-[0_4px_16px_-4px_hsl(25_30%_10%/0.06),inset_0_1px_2px_0_hsl(38_25%_96%/0.3)] " +
+          "hover:bg-background/30 hover:border-foreground/15 hover:-translate-y-0.5",
+        tertiary:
+          "relative bg-background/20 backdrop-blur-md " +
+          "border border-foreground/20 " +
+          "shadow-[0_0_20px_0_hsl(var(--primary)/0.15),inset_0_1px_2px_0_hsl(38_25%_96%/0.2)] " +
+          "hover:shadow-[0_0_30px_0_hsl(var(--primary)/0.25),inset_0_1px_2px_0_hsl(38_25%_96%/0.3)] hover:border-primary/40 hover:-translate-y-0.5",
         ghost: "hover:bg-secondary/80 hover:text-foreground border border-transparent hover:border-border/50",
         link: "text-primary underline-offset-4 hover:underline normal-case",
         hero: 
