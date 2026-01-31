@@ -256,28 +256,50 @@ export default function PracticeResults() {
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
-          <Button className="w-full" asChild>
-            <Link to="/candidate/start?test=secondfreetest">
-              <RotateCcw className="h-3 w-3 mr-2" />
-              Try One More Test
-            </Link>
-          </Button>
-          {user ? (
-            <Button variant="outline" className="w-full" asChild>
-              <Link to="/dashboard">
-                <Home className="h-3 w-3 mr-2" />
-                Dashboard
-              </Link>
-            </Button>
+          {test.slug === 'firstfreetest' ? (
+            <>
+              <Button className="w-full" asChild>
+                <Link to="/candidate/start?test=secondfreetest">
+                  <RotateCcw className="h-3 w-3 mr-2" />
+                  Try One More Test
+                </Link>
+              </Button>
+              {user ? (
+                <Button variant="outline" className="w-full" asChild>
+                  <Link to="/dashboard">
+                    <Home className="h-3 w-3 mr-2" />
+                    Dashboard
+                  </Link>
+                </Button>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setShowBundleModal(true)}
+                >
+                  <Sparkles className="h-3 w-3 mr-2" />
+                  Buy Unlimited Tests
+                </Button>
+              )}
+            </>
           ) : (
-            <Button 
-              variant="outline" 
-              className="w-full"
-              onClick={() => setShowBundleModal(true)}
-            >
-              <Sparkles className="h-3 w-3 mr-2" />
-              Buy Unlimited Tests
-            </Button>
+            // secondfreetest or any other - no more free tests available
+            user ? (
+              <Button className="w-full" asChild>
+                <Link to="/dashboard">
+                  <Home className="h-3 w-3 mr-2" />
+                  Dashboard
+                </Link>
+              </Button>
+            ) : (
+              <Button 
+                className="w-full"
+                onClick={() => setShowBundleModal(true)}
+              >
+                <Sparkles className="h-3 w-3 mr-2" />
+                Buy Unlimited Tests
+              </Button>
+            )
           )}
         </div>
       </div>
