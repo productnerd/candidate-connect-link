@@ -315,7 +315,7 @@ export default function PracticeSession() {
             </Button>
 
             {/* Centered: Practice Mode + Timer stacked */}
-            <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
+            <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center mt-1">
               <Badge variant="outline" className="font-mono uppercase text-[10px] tracking-wider mb-1">
                 Practice Mode
               </Badge>
