@@ -6,13 +6,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { QuestionOptions } from '@/components/test/QuestionOptions';
 import { 
   Loader2, 
-  Clock, 
   ChevronLeft, 
   ChevronRight, 
   Flag,
-  CheckCircle,
   ArrowLeft
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
@@ -112,14 +111,22 @@ export default function PracticeSession() {
       if (testError) throw testError;
       setTest(testData);
 
-      // Fetch questions
-      const { data: questionsData, error: questionsError } = await supabase
-        .from('test_questions')
-        .select('*')
+      // Fetch questions via junction table
+      const { data: linksData, error: linksError } = await supabase
+        .from('test_question_links')
+        .select(`
+          order_number,
+          question:test_questions(*)
+        `)
         .eq('test_id', hydrated.testId)
         .order('order_number', { ascending: true });
 
-      if (questionsError) throw questionsError;
+      if (linksError) throw linksError;
+      
+      // Extract questions from links and flatten
+      const questionsData = (linksData || [])
+        .map(link => link.question)
+        .filter((q): q is TestQuestion => q !== null);
       setQuestions(questionsData || []);
     } catch (err) {
       console.error('Error loading session:', err);
@@ -353,53 +360,21 @@ export default function PracticeSession() {
 
               {/* Options */}
               {currentQuestion?.question_type === 'multiple_choice' && options && (
-                <div className="space-y-3">
-                  {options.map((option, idx) => {
-                    const isSelected = getCurrentAnswer()?.answer === option;
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => handleAnswer(option)}
-                        className={`w-full p-4 rounded-lg border text-left transition-all ${
-                          isSelected
-                            ? 'border-primary bg-primary/10 ring-2 ring-primary'
-                            : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                            isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground'
-                          }`}>
-                            {isSelected && <CheckCircle className="h-4 w-4" />}
-                          </div>
-                          <span>{option}</span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                <QuestionOptions
+                  options={options}
+                  selectedAnswer={getCurrentAnswer()?.answer || null}
+                  onSelect={handleAnswer}
+                  category={(currentQuestion as any).category}
+                />
               )}
 
               {/* True/False */}
               {currentQuestion?.question_type === 'true_false' && (
-                <div className="flex gap-4">
-                  {['True', 'False'].map((option) => {
-                    const isSelected = getCurrentAnswer()?.answer === option;
-                    return (
-                      <button
-                        key={option}
-                        onClick={() => handleAnswer(option)}
-                        className={`flex-1 p-4 rounded-lg border text-center transition-all ${
-                          isSelected
-                            ? 'border-primary bg-primary/10 ring-2 ring-primary'
-                            : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                        }`}
-                      >
-                        {option}
-                      </button>
-                    );
-                  })}
-                </div>
+                <QuestionOptions
+                  options={['True', 'False']}
+                  selectedAnswer={getCurrentAnswer()?.answer || null}
+                  onSelect={handleAnswer}
+                />
               )}
             </CardContent>
           </Card>

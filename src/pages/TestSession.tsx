@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+import { QuestionOptions } from '@/components/test/QuestionOptions';
 import { Loader2, Clock, ChevronLeft, ChevronRight, Flag, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -121,15 +120,23 @@ export default function TestSession() {
       if (testError) throw testError;
       setTest(testData);
 
-      // Load questions
-      const { data: questionsData, error: questionsError } = await supabase
-        .from('test_questions')
-        .select('*')
+      // Load questions via junction table
+      const { data: linksData, error: linksError } = await supabase
+        .from('test_question_links')
+        .select(`
+          order_number,
+          question:test_questions(*)
+        `)
         .eq('test_id', sessionData.test_id)
         .order('order_number', { ascending: true });
 
-      if (questionsError) throw questionsError;
-      setQuestions(questionsData || []);
+      if (linksError) throw linksError;
+      
+      // Extract questions from links and flatten
+      const questionsData = (linksData || [])
+        .map(link => link.question)
+        .filter((q): q is TestQuestion => q !== null);
+      setQuestions(questionsData);
 
     } catch (err) {
       console.error('Error loading session:', err);
@@ -225,7 +232,7 @@ export default function TestSession() {
         .eq('invitation_token', token)
         .single();
 
-      // Create result
+      // Create result (raw score only, no percentage stored)
       const { error: resultError } = await supabase
         .from('test_results')
         .insert({
@@ -235,7 +242,6 @@ export default function TestSession() {
           organization_id: invitation?.organization_id || null,
           candidate_email: invitation?.candidate_email || 'anonymous',
           score,
-          percentage,
           time_taken_seconds: (test.duration_minutes * 60) - timeRemaining,
           question_breakdown: questionBreakdown as unknown as Json,
         });
@@ -360,43 +366,20 @@ export default function TestSession() {
 
                 {/* Options */}
                 {currentQuestion.question_type === 'multiple_choice' && currentQuestion.options && (
-                  <RadioGroup
-                    value={getCurrentAnswer(currentQuestion.id)?.answer || ''}
-                    onValueChange={(value) => handleAnswer(currentQuestion.id, value)}
-                    className="space-y-3"
-                  >
-                    {(currentQuestion.options as string[]).map((option, idx) => (
-                      <div 
-                        key={idx} 
-                        className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors"
-                      >
-                        <RadioGroupItem value={option} id={`option-${idx}`} />
-                        <Label htmlFor={`option-${idx}`} className="flex-1 cursor-pointer">
-                          {option}
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
+                  <QuestionOptions
+                    options={currentQuestion.options as string[]}
+                    selectedAnswer={getCurrentAnswer(currentQuestion.id)?.answer || null}
+                    onSelect={(value) => handleAnswer(currentQuestion.id, value)}
+                    category={(currentQuestion as any).category}
+                  />
                 )}
 
                 {currentQuestion.question_type === 'true_false' && (
-                  <RadioGroup
-                    value={getCurrentAnswer(currentQuestion.id)?.answer || ''}
-                    onValueChange={(value) => handleAnswer(currentQuestion.id, value)}
-                    className="space-y-3"
-                  >
-                    {['True', 'False'].map((option) => (
-                      <div 
-                        key={option} 
-                        className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors"
-                      >
-                        <RadioGroupItem value={option} id={`option-${option}`} />
-                        <Label htmlFor={`option-${option}`} className="flex-1 cursor-pointer">
-                          {option}
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
+                  <QuestionOptions
+                    options={['True', 'False']}
+                    selectedAnswer={getCurrentAnswer(currentQuestion.id)?.answer || null}
+                    onSelect={(value) => handleAnswer(currentQuestion.id, value)}
+                  />
                 )}
               </CardContent>
             </Card>
