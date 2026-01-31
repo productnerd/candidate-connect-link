@@ -273,7 +273,7 @@ export default function PracticeSession() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card border-b px-4 py-3">
         <div className="max-w-4xl mx-auto">
-          {/* Top row: Exit, Timer, Submit */}
+          {/* Top row: Exit, Practice Mode + Timer (centered), Submit */}
           <div className="flex items-center justify-between">
             <Button 
               variant="ghost" 
@@ -284,24 +284,30 @@ export default function PracticeSession() {
               Exit
             </Button>
 
-            <Badge variant="outline" className="font-mono uppercase text-[10px] tracking-wider">
-              Practice Mode
-            </Badge>
-
-            <div className="flex items-center gap-4">
-              <div className={`flex items-center gap-2 font-mono text-lg ${timeRemaining < 60 ? 'text-destructive animate-pulse' : ''}`}>
-                <Clock className="h-5 w-5" />
+            {/* Centered: Practice Mode + Timer stacked */}
+            <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
+              <Badge variant="outline" className="font-mono uppercase text-[10px] tracking-wider mb-1">
+                Practice Mode
+              </Badge>
+              <div className={`font-mono text-lg transition-colors duration-300 ${
+                timeRemaining < 10 
+                  ? 'text-primary animate-pulse' 
+                  : timeRemaining < 60 
+                    ? 'text-primary' 
+                    : 'text-foreground'
+              }`}>
                 {formatTime(timeRemaining)}
               </div>
-              <Button 
-                variant="destructive" 
-                size="sm"
-                onClick={handleSubmit}
-                disabled={submitting}
-              >
-                {submitting ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Submit'}
-              </Button>
             </div>
+
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={handleSubmit}
+              disabled={submitting}
+            >
+              {submitting ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Submit'}
+            </Button>
           </div>
         </div>
       </header>
