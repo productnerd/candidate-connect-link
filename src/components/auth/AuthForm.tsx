@@ -139,7 +139,7 @@ export function AuthForm({ role }: AuthFormProps) {
   return (
     <Card className="w-full max-w-md shadow-xl border-0 card-elevated">
       <CardHeader className="space-y-1 pb-6">
-        <CardTitle className="text-2xl font-bold text-center">Welcome to CCAT</CardTitle>
+        
         <CardDescription className="text-center">
           Sign in to your account or create a new one
         </CardDescription>
