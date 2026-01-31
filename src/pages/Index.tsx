@@ -86,7 +86,7 @@ export default function Index() {
                 </Link>
               </Button>
               <Button size="xl" variant="outline" asChild className="bg-white/10 border-white/20 text-primary-foreground hover:bg-white/20">
-                <Link to="/practice/demo">Try Practice Test</Link>
+                <Link to="/practice">Try Practice Test</Link>
               </Button>
             </div>
           </div>
