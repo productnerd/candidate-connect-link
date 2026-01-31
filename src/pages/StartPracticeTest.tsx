@@ -58,7 +58,7 @@ export default function StartPracticeTest() {
       });
 
       // Navigate directly to fullscreen test session
-      navigate(`/practice/session/${id}`, { replace: true });
+      navigate(`/candidate/session/${id}`, { replace: true });
 
     } catch (err) {
       console.error('Error starting practice test:', err);
@@ -77,7 +77,7 @@ export default function StartPracticeTest() {
         <div className="text-center">
           <p className="text-destructive mb-4">{error}</p>
           <button 
-            onClick={() => navigate('/practice')}
+            onClick={() => navigate('/candidate')}
             className="text-primary hover:underline"
           >
             Return to Practice

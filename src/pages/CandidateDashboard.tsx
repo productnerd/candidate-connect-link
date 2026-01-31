@@ -164,7 +164,7 @@ export default function CandidateDashboard() {
                   You'll see test invitations here when employers send them to you
                 </p>
                 <Button variant="outline" asChild>
-                  <Link to="/practice/start">
+                  <Link to="/candidate/start">
                     <BookOpen className="h-4 w-4 mr-2" />
                     Try Practice Tests
                   </Link>
