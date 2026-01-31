@@ -139,12 +139,6 @@ export function AuthForm({ role }: AuthFormProps) {
   return (
     <Card className="w-full max-w-md shadow-xl border-0 card-elevated">
       <CardHeader className="space-y-1 pb-6">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <RoleIcon className="h-5 w-5 text-primary" />
-          </div>
-          <span className="text-sm font-medium text-muted-foreground">{roleLabel} Account</span>
-        </div>
         <CardTitle className="text-2xl font-bold text-center">Welcome to CCAT</CardTitle>
         <CardDescription className="text-center">
           Sign in to your account or create a new one
