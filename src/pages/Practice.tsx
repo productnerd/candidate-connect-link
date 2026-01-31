@@ -338,14 +338,6 @@ export default function Practice() {
             
             {/* Card */}
             <div className="relative bg-card/90 backdrop-blur-xl rounded-2xl border border-primary/20 shadow-2xl shadow-primary/10 overflow-hidden">
-              {/* Close Button */}
-              <button 
-                onClick={() => setShowBundleModal(false)}
-                className="absolute top-4 right-4 z-10 p-1 rounded-full bg-muted/50 hover:bg-muted transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
-
               {/* Header Gradient */}
               <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-transparent px-6 pt-8 pb-6">
                 <div className="flex items-center justify-center mb-4">
