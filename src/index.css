@@ -132,15 +132,15 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  /* Typography scale */
+  /* Typography scale - Elegant serif for headings */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
+    @apply font-display font-medium tracking-tight;
   }
   
-  h1 { @apply text-4xl md:text-5xl lg:text-6xl; }
-  h2 { @apply text-3xl md:text-4xl; }
-  h3 { @apply text-2xl md:text-3xl; }
-  h4 { @apply text-xl md:text-2xl; }
+  h1 { @apply text-4xl md:text-5xl lg:text-6xl font-light; }
+  h2 { @apply text-3xl md:text-4xl font-normal; }
+  h3 { @apply text-2xl md:text-3xl font-normal; }
+  h4 { @apply text-xl md:text-2xl font-medium; }
 }
 
 @layer utilities {
