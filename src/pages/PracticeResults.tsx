@@ -158,7 +158,7 @@ export default function PracticeResults() {
           <CardContent className="pt-6">
             <div className="text-center mb-6">
               <div className={`text-[10rem] leading-none font-display font-bold mb-2 ${getScoreColor(result.percentage)}`}>
-                {result.score}/{test.question_count}
+                {result.score}
               </div>
               <p className="text-muted-foreground mb-2">
                 {displayedScore}% accuracy
@@ -240,7 +240,7 @@ export default function PracticeResults() {
         {/* Actions */}
         <div className="flex flex-col gap-3">
           <Button className="w-full" asChild>
-            <Link to="/candidate/start">
+            <Link to="/candidate/start?test=secondfreetest">
               <RotateCcw className="h-3 w-3 mr-2" />
               Try One More Test
             </Link>
