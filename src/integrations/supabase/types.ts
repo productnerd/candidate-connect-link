@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      candidate_test_history: {
+        Row: {
+          category_scores: Json | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          score: number
+          session_id: string | null
+          test_type: string
+          time_taken_seconds: number | null
+          total_questions: number
+          user_id: string
+        }
+        Insert: {
+          category_scores?: Json | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          score: number
+          session_id?: string | null
+          test_type: string
+          time_taken_seconds?: number | null
+          total_questions: number
+          user_id: string
+        }
+        Update: {
+          category_scores?: Json | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          score?: number
+          session_id?: string | null
+          test_type?: string
+          time_taken_seconds?: number | null
+          total_questions?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_test_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string | null
