@@ -139,13 +139,12 @@ export const Navbar = React.forwardRef<HTMLElement, Record<string, never>>((_, r
               </DropdownMenu>
             </>
           ) : (
-            <Link
-              to="/auth"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-foreground hover:text-primary transition-all duration-300 glass-button"
-            >
-              <ArrowRight className="h-4 w-4" />
-              Login
-            </Link>
+            <Button variant="default" size="sm" className="rounded-xl" asChild>
+              <Link to="/auth">
+                <ArrowRight className="h-4 w-4" />
+                Login
+              </Link>
+            </Button>
           )}
         </div>
       </div>
