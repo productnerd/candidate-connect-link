@@ -58,20 +58,8 @@ export const Navbar = React.forwardRef<HTMLElement, Record<string, never>>((_, r
           </span>
         </Link>
 
-        {/* Centered Nav Pills */}
-        {!user && !isCandidateLanding && (
-          <div className="hidden md:flex items-center gap-1 glass-card px-2 py-1.5">
-            {navItems.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-300"
-              >
-                {item.label}
-              </a>
-            ))}
-          </div>
-        )}
+        {/* Spacer for centering */}
+        <div className="hidden md:block" />
 
         {/* Right Side */}
         <div className="flex items-center gap-3">
