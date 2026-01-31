@@ -207,29 +207,65 @@
     box-shadow: var(--shadow-3d), var(--shadow-glass-inset);
   }
 
-  /* Glass button */
+  /* 3D Glass button with depth */
   .glass-button {
     @apply relative px-6 py-3 rounded-xl font-medium;
-    background: var(--gradient-glass);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid hsl(var(--glass-border));
-    box-shadow: var(--shadow-glass), var(--shadow-glass-inset);
+    background: linear-gradient(145deg, 
+      rgba(255, 255, 255, 0.95) 0%, 
+      rgba(255, 255, 255, 0.7) 50%,
+      rgba(255, 255, 255, 0.5) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 
+      0 8px 32px -4px rgba(0, 0, 0, 0.1),
+      0 4px 16px -2px rgba(0, 0, 0, 0.08),
+      inset 0 2px 4px 0 rgba(255, 255, 255, 0.8),
+      inset 0 -2px 4px 0 rgba(0, 0, 0, 0.02);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .glass-button:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-glass-hover), var(--shadow-glass-inset);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 
+      0 16px 48px -8px rgba(0, 0, 0, 0.15),
+      0 8px 24px -4px rgba(0, 0, 0, 0.1),
+      inset 0 2px 4px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -2px 4px 0 rgba(0, 0, 0, 0.02);
+  }
+  
+  .glass-button:active {
+    transform: translateY(-1px) scale(0.99);
   }
 
-  /* Glass navbar */
+  .dark .glass-button {
+    background: linear-gradient(145deg, 
+      rgba(255, 255, 255, 0.12) 0%, 
+      rgba(255, 255, 255, 0.06) 50%,
+      rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 
+      0 8px 32px -4px rgba(0, 0, 0, 0.4),
+      0 4px 16px -2px rgba(0, 0, 0, 0.3),
+      inset 0 1px 2px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -1px 2px 0 rgba(0, 0, 0, 0.2);
+  }
+  
+  .dark .glass-button:hover {
+    box-shadow: 
+      0 16px 48px -8px rgba(0, 0, 0, 0.5),
+      0 8px 24px -4px rgba(0, 0, 0, 0.4),
+      inset 0 1px 2px 0 rgba(255, 255, 255, 0.15),
+      inset 0 -1px 2px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  /* Glass navbar - fully transparent */
   .glass-nav {
     @apply fixed top-0 left-0 right-0 z-50;
-    background: hsl(var(--glass-bg));
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border-bottom: 1px solid hsl(var(--glass-border));
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: none;
   }
 
   /* Glowing orb decorations */

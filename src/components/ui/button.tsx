@@ -9,15 +9,40 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-lg shadow-destructive/20",
-        outline: "border border-input bg-background/50 backdrop-blur-sm hover:bg-secondary hover:border-primary/30",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-md",
-        ghost: "hover:bg-secondary hover:text-foreground",
+        default: 
+          "relative bg-gradient-to-b from-primary via-primary to-primary/90 text-primary-foreground " +
+          "shadow-[0_8px_24px_-4px_hsl(var(--primary)/0.35),0_4px_12px_-2px_hsl(var(--primary)/0.25),inset_0_2px_4px_0_rgba(255,255,255,0.25),inset_0_-2px_4px_0_rgba(0,0,0,0.1)] " +
+          "hover:shadow-[0_12px_32px_-4px_hsl(var(--primary)/0.45),0_6px_16px_-2px_hsl(var(--primary)/0.3),inset_0_2px_4px_0_rgba(255,255,255,0.3),inset_0_-2px_4px_0_rgba(0,0,0,0.1)] " +
+          "hover:-translate-y-1 active:translate-y-0 active:shadow-[0_4px_12px_-2px_hsl(var(--primary)/0.3),inset_0_2px_4px_0_rgba(0,0,0,0.1)]",
+        destructive: 
+          "relative bg-gradient-to-b from-destructive via-destructive to-destructive/90 text-destructive-foreground " +
+          "shadow-[0_8px_24px_-4px_hsl(var(--destructive)/0.35),inset_0_2px_4px_0_rgba(255,255,255,0.2),inset_0_-2px_4px_0_rgba(0,0,0,0.1)] " +
+          "hover:-translate-y-0.5",
+        outline: 
+          "relative border-2 border-border/60 bg-gradient-to-b from-background via-background to-muted/30 backdrop-blur-md " +
+          "shadow-[0_4px_16px_-4px_rgba(0,0,0,0.08),inset_0_2px_4px_0_rgba(255,255,255,0.6),inset_0_-1px_2px_0_rgba(0,0,0,0.02)] " +
+          "hover:border-primary/40 hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.12),inset_0_2px_4px_0_rgba(255,255,255,0.8)] hover:-translate-y-0.5",
+        secondary: 
+          "relative bg-gradient-to-b from-secondary via-secondary to-secondary/80 text-secondary-foreground " +
+          "shadow-[0_4px_16px_-4px_rgba(0,0,0,0.1),inset_0_2px_4px_0_rgba(255,255,255,0.5),inset_0_-2px_4px_0_rgba(0,0,0,0.03)] " +
+          "hover:-translate-y-0.5",
+        ghost: "hover:bg-secondary/80 hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        hero: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/35 hover:-translate-y-1 font-semibold",
-        accent: "bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg shadow-accent/20 hover:shadow-xl hover:shadow-accent/30 font-semibold",
-        glass: "bg-background/70 backdrop-blur-md border border-border/50 text-foreground hover:bg-background/80 shadow-glass hover:shadow-glass-hover hover:-translate-y-0.5",
+        hero: 
+          "relative bg-gradient-to-b from-primary via-primary to-primary/85 text-primary-foreground font-semibold " +
+          "shadow-[0_12px_32px_-4px_hsl(var(--primary)/0.4),0_6px_16px_-2px_hsl(var(--primary)/0.3),inset_0_3px_6px_0_rgba(255,255,255,0.3),inset_0_-3px_6px_0_rgba(0,0,0,0.15)] " +
+          "hover:shadow-[0_20px_48px_-8px_hsl(var(--primary)/0.5),0_10px_24px_-4px_hsl(var(--primary)/0.35),inset_0_3px_6px_0_rgba(255,255,255,0.35),inset_0_-3px_6px_0_rgba(0,0,0,0.15)] " +
+          "hover:-translate-y-1.5 active:translate-y-0",
+        accent: 
+          "relative bg-gradient-to-b from-accent via-accent to-accent/85 text-accent-foreground font-semibold " +
+          "shadow-[0_8px_24px_-4px_hsl(var(--accent)/0.4),inset_0_2px_4px_0_rgba(255,255,255,0.3),inset_0_-2px_4px_0_rgba(0,0,0,0.1)] " +
+          "hover:shadow-[0_12px_32px_-4px_hsl(var(--accent)/0.5),inset_0_2px_4px_0_rgba(255,255,255,0.35)] hover:-translate-y-1",
+        glass: 
+          "relative bg-gradient-to-b from-white/90 via-white/70 to-white/50 dark:from-white/12 dark:via-white/06 dark:to-white/02 backdrop-blur-xl " +
+          "border border-white/60 dark:border-white/15 text-foreground " +
+          "shadow-[0_8px_32px_-4px_rgba(0,0,0,0.1),0_4px_16px_-2px_rgba(0,0,0,0.08),inset_0_2px_4px_0_rgba(255,255,255,0.8),inset_0_-2px_4px_0_rgba(0,0,0,0.02)] " +
+          "hover:shadow-[0_16px_48px_-8px_rgba(0,0,0,0.15),0_8px_24px_-4px_rgba(0,0,0,0.1),inset_0_2px_4px_0_rgba(255,255,255,0.9)] " +
+          "hover:-translate-y-1 active:translate-y-0",
       },
       size: {
         default: "h-10 px-5 py-2",
