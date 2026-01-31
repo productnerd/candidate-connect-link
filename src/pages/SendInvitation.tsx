@@ -99,6 +99,8 @@ export default function SendInvitation() {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + data.expiresInDays);
 
+      const selectedTest = tests.find(t => t.id === data.testId);
+
       const { error } = await supabase
         .from('test_invitations')
         .insert({
@@ -109,16 +111,43 @@ export default function SendInvitation() {
           invited_by: profile.id,
           invitation_token: token,
           expires_at: expiresAt.toISOString(),
+          inviter_name: profile.full_name || undefined,
+          inviter_email: profile.email,
         });
 
       if (error) throw error;
 
+      // Send email notification
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-test-invitation', {
+          body: {
+            candidateEmail: data.candidateEmail.toLowerCase().trim(),
+            candidateName: data.candidateName.trim(),
+            testName: selectedTest?.name || 'Assessment',
+            inviterName: profile.full_name || '',
+            companyName: '', // Could be fetched from organization if needed
+            invitationToken: token,
+            expiresAt: expiresAt.toISOString(),
+            baseUrl: window.location.origin,
+          },
+        });
+
+        if (emailError) {
+          console.error('Failed to send email:', emailError);
+          // Don't fail the whole operation if email fails
+          toast.warning('Invitation created, but email could not be sent. Please share the link manually.');
+        } else {
+          toast.success('Invitation sent!', {
+            description: `Email sent to ${data.candidateName}`,
+          });
+        }
+      } catch (emailErr) {
+        console.error('Email sending failed:', emailErr);
+        toast.warning('Invitation created, but email could not be sent. Please share the link manually.');
+      }
+
       // Show the invitation link
       setCreatedInvitation({ token, name: data.candidateName });
-      
-      toast.success('Invitation created successfully!', {
-        description: `Copy the link below to share with ${data.candidateName}`,
-      });
     } catch (error: any) {
       console.error('Error sending invitation:', error);
       toast.error('Failed to send invitation', {
