@@ -168,12 +168,13 @@ export default function Practice() {
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
-              <button 
+              <Button 
+                variant="secondary"
                 onClick={() => setShowBundleModal(true)}
-                className="text-background/80 hover:text-background underline underline-offset-4 text-sm hover:scale-105 transition-all duration-200"
               >
-                or purchase unlimited premium tests (€14)
-              </button>
+                <Sparkles className="h-4 w-4" />
+                Unlimited Premium Tests €14
+              </Button>
             </div>
           </div>
         </div>
