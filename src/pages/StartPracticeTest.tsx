@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Brain } from 'lucide-react';
@@ -7,6 +7,7 @@ import { createPracticeSession } from '@/lib/practiceSessionStorage';
 
 export default function StartPracticeTest() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [error, setError] = useState<string | null>(null);
 
@@ -16,24 +17,27 @@ export default function StartPracticeTest() {
 
   const startPracticeSession = async () => {
     try {
-      // Get the first free practice test
+      // Check for test slug in URL params, default to firstfreetest
+      const testSlug = searchParams.get('test') || 'firstfreetest';
+      
+      // Get the requested practice test
       const { data: test, error: testError } = await supabase
         .from('test_library')
         .select('*')
         .eq('is_active', true)
-        .eq('slug', 'firstfreetest')
+        .eq('slug', testSlug)
         .maybeSingle();
 
       if (testError) throw testError;
 
-      // Fallback to CCAT test if firstfreetest not found
+      // Fallback to firstfreetest if requested test not found
       let practiceTest = test;
       if (!practiceTest) {
         const { data: fallbackTest, error: fallbackError } = await supabase
           .from('test_library')
           .select('*')
           .eq('is_active', true)
-          .eq('slug', 'ccat-cognitive')
+          .eq('slug', 'firstfreetest')
           .maybeSingle();
 
         if (fallbackError) throw fallbackError;
