@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { 
   Brain, 
   CheckCircle, 
@@ -23,12 +25,40 @@ import employerHeroBg from '@/assets/employer-hero-bg.png';
 
 export default function Index() {
   const [showBundleModal, setShowBundleModal] = useState(false);
+  const [selectedBundle, setSelectedBundle] = useState<number | null>(1); // Default to best value
+  const [isLoading, setIsLoading] = useState(false);
   
   const employerBundles = [
-    { tests: 30, price: 9, perTest: '€0.30' },
-    { tests: 100, price: 29, perTest: '€0.29', popular: true },
-    { tests: 500, price: 79, perTest: '€0.16' },
+    { tests: 30, price: 9, perTest: '€0.30', bundleType: 'employer_30' },
+    { tests: 100, price: 29, perTest: '€0.29', popular: true, bundleType: 'employer_100' },
+    { tests: 500, price: 79, perTest: '€0.16', bundleType: 'employer_500' },
   ];
+
+  const handleCheckout = async () => {
+    if (selectedBundle === null) {
+      toast.error('Please select a bundle');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const bundle = employerBundles[selectedBundle];
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { bundle_type: bundle.bundleType },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        setShowBundleModal(false);
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('Failed to start checkout. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const features = [
     {
@@ -336,9 +366,10 @@ export default function Index() {
                 {employerBundles.map((bundle, index) => (
                   <div 
                     key={index}
+                    onClick={() => setSelectedBundle(index)}
                     className={`relative p-4 rounded-xl border transition-all cursor-pointer hover:scale-[1.02] ${
-                      bundle.popular 
-                        ? 'bg-primary/10 border-primary/30 shadow-lg shadow-primary/10' 
+                      selectedBundle === index
+                        ? 'bg-primary/10 border-primary/40 shadow-lg shadow-primary/10 ring-2 ring-primary/30' 
                         : 'bg-muted/30 border-border/50 hover:border-primary/20'
                     }`}
                   >
@@ -350,9 +381,9 @@ export default function Index() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                          bundle.popular ? 'bg-primary/20' : 'bg-muted'
+                          selectedBundle === index ? 'bg-primary/20' : 'bg-muted'
                         }`}>
-                          <Package className={`h-5 w-5 ${bundle.popular ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <Package className={`h-5 w-5 ${selectedBundle === index ? 'text-primary' : 'text-muted-foreground'}`} />
                         </div>
                         <div>
                           <p className="font-semibold">{bundle.tests} Tests</p>
@@ -387,12 +418,23 @@ export default function Index() {
 
               {/* CTA */}
               <div className="px-6 pb-6">
-                <Button className="w-full h-12 text-base shadow-lg shadow-primary/20" size="lg">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Continue to Checkout
+                <Button 
+                  className="w-full h-12 text-base shadow-lg shadow-primary/20" 
+                  size="lg"
+                  onClick={handleCheckout}
+                  disabled={isLoading || selectedBundle === null}
+                >
+                  {isLoading ? (
+                    <>Processing...</>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Continue to Checkout
+                    </>
+                  )}
                 </Button>
                 <p className="text-center text-xs text-muted-foreground mt-3">
-                  Secure checkout • Instant access
+                  Secure checkout • Opens in new tab
                 </p>
               </div>
             </div>

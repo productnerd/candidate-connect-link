@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { 
   Brain, 
   CheckCircle, 
@@ -26,6 +28,28 @@ import candidateHeroBg from '@/assets/candidate-hero-bg.png';
 
 export default function Practice() {
   const [showBundleModal, setShowBundleModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleCandidateCheckout = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { bundle_type: 'candidate_unlimited' },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        setShowBundleModal(false);
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('Failed to start checkout. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const benefits = [
     {
       icon: Target,
@@ -411,12 +435,23 @@ export default function Practice() {
 
               {/* CTA */}
               <div className="px-6 pb-6">
-                <Button className="w-full h-12 text-base shadow-lg shadow-primary/20" size="lg">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Get Unlimited Access
+                <Button 
+                  className="w-full h-12 text-base shadow-lg shadow-primary/20" 
+                  size="lg"
+                  onClick={handleCandidateCheckout}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>Processing...</>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Get Unlimited Access
+                    </>
+                  )}
                 </Button>
                 <p className="text-center text-xs text-muted-foreground mt-3">
-                  Secure checkout • Instant access
+                  Secure checkout • Opens in new tab
                 </p>
               </div>
             </div>
