@@ -28,17 +28,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    
-    if (data && !error) {
-      setProfile(data as Profile);
+    setProfileLoading(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        setProfile(null);
+        return;
+      }
+
+      setProfile((data as Profile) ?? null);
+    } finally {
+      setProfileLoading(false);
     }
   };
 
@@ -57,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           setProfile(null);
         }
-        setLoading(false);
+        setAuthLoading(false);
       }
     );
 
@@ -69,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         fetchProfile(session.user.id);
       }
-      setLoading(false);
+      setAuthLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -164,6 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setProfile(null);
+    setProfileLoading(false);
   };
 
   const refreshProfile = async () => {
@@ -177,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       session,
       profile,
-      loading,
+      loading: authLoading || profileLoading,
       signUp,
       signIn,
       signOut,
