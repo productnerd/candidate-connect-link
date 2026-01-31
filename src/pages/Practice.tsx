@@ -149,12 +149,14 @@ export default function Practice() {
               <span>Join 10,000+ candidates who improved their scores</span>
             </div>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-              Ace your CCAT with
-              <span className="block mt-2 text-gradient-hero">practice that works</span>
+            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-medium leading-[1.1] tracking-tight mb-8">
+              Ace your CCAT with{' '}
+              <span className="text-gradient-primary">practice</span>
+              <br />
+              <span className="text-gradient-hero">that works</span>
             </h1>
             
-            <p className="text-lg md:text-xl text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-background/90 mb-12 max-w-2xl mx-auto">
               Prepare for your cognitive aptitude test with realistic practice exams. 
               Build confidence, improve speed, and maximize your score.
             </p>
