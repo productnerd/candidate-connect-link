@@ -110,7 +110,7 @@ export default function Index() {
                 href="/candidate/start"
                 target="_blank"
                 rel="noreferrer"
-                className="text-sm text-background/90 underline underline-offset-4 hover:text-background transition-colors"
+                className="text-sm text-background/80 underline underline-offset-4 hover:text-background hover:scale-105 transition-all duration-200"
               >
                 or try the test yourself
               </a>
@@ -283,7 +283,7 @@ export default function Index() {
               href="/candidate/start"
               target="_blank"
               rel="noreferrer"
-              className="text-sm text-background/90 underline underline-offset-4 hover:text-background transition-colors"
+              className="text-sm text-background/80 underline underline-offset-4 hover:text-background hover:scale-105 transition-all duration-200"
             >
               or try the test yourself
             </a>
