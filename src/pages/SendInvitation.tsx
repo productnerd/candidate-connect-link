@@ -19,7 +19,10 @@ import {
   Mail,
   User,
   Calendar,
-  Brain
+  Brain,
+  Copy,
+  CheckCircle,
+  Link as LinkIcon
 } from 'lucide-react';
 
 interface TestOption {
@@ -143,6 +146,65 @@ export default function SendInvitation() {
           <p className="text-muted-foreground">Invite a candidate to complete an assessment</p>
         </div>
 
+        {/* Success State - Show Link */}
+        {createdInvitation ? (
+          <Card className="card-elevated border-success/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-success">
+                <CheckCircle className="h-5 w-5" />
+                Invitation Created!
+              </CardTitle>
+              <CardDescription>
+                Share this link with {createdInvitation.name} to take the test
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Invitation Link</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={`${window.location.origin}/test/${createdInvitation.token}`}
+                    readOnly
+                    className="font-mono text-sm"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/test/${createdInvitation.token}`);
+                      toast.success('Link copied to clipboard!');
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+                <p className="flex items-center gap-2 mb-2">
+                  <LinkIcon className="h-4 w-4" />
+                  The candidate can use this link to go directly to the test—no account required.
+                </p>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setCreatedInvitation(null);
+                    form.reset();
+                  }} 
+                  className="flex-1"
+                >
+                  Create Another
+                </Button>
+                <Button variant="default" onClick={() => navigate('/dashboard')} className="flex-1">
+                  Go to Dashboard
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
         <Card className="card-elevated">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -281,12 +343,15 @@ export default function SendInvitation() {
             </form>
           </CardContent>
         </Card>
+        )}
 
         {/* Info Note */}
-        <p className="text-sm text-muted-foreground mt-6 text-center">
-          The candidate will receive a unique link to complete the assessment. 
-          You'll be notified when they complete it.
-        </p>
+        {!createdInvitation && (
+          <p className="text-sm text-muted-foreground mt-6 text-center">
+            The candidate will receive a unique link to complete the assessment. 
+            You'll be notified when they complete it.
+          </p>
+        )}
       </main>
     </div>
   );
