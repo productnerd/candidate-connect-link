@@ -58,8 +58,31 @@ export const Navbar = React.forwardRef<HTMLElement, Record<string, never>>((_, r
           </span>
         </Link>
 
-        {/* Spacer for centering */}
-        <div className="hidden md:block" />
+        {/* Centered Business/Candidate Toggle */}
+        <div className="hidden md:flex absolute left-1/2 -translate-x-1/2">
+          <div className="flex items-center glass-card p-1">
+            <Link
+              to="/employer"
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
+                isEmployerLanding
+                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-primary/10'
+              }`}
+            >
+              Business
+            </Link>
+            <Link
+              to="/candidate"
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
+                isCandidateLanding
+                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-primary/10'
+              }`}
+            >
+              Candidate
+            </Link>
+          </div>
+        </div>
 
         {/* Right Side */}
         <div className="flex items-center gap-3">
@@ -116,38 +139,13 @@ export const Navbar = React.forwardRef<HTMLElement, Record<string, never>>((_, r
               </DropdownMenu>
             </>
           ) : (
-            <div className="flex items-center gap-3">
-              {/* Business / Candidate Toggle */}
-              <div className="flex items-center glass-card p-1">
-                <Link
-                  to="/employer"
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                    isEmployerLanding
-                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-primary/10'
-                  }`}
-                >
-                  Business
-                </Link>
-                <Link
-                  to="/candidate"
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                    isCandidateLanding
-                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-primary/10'
-                  }`}
-                >
-                  Candidate
-                </Link>
-              </div>
-              <Link
-                to="/auth"
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-foreground hover:text-primary transition-all duration-300 glass-button"
-              >
-                <ArrowRight className="h-4 w-4" />
-                Login
-              </Link>
-            </div>
+            <Link
+              to="/auth"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-foreground hover:text-primary transition-all duration-300 glass-button"
+            >
+              <ArrowRight className="h-4 w-4" />
+              Login
+            </Link>
           )}
         </div>
       </div>
