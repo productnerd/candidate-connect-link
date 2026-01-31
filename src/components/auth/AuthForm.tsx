@@ -138,12 +138,8 @@ export function AuthForm({ role }: AuthFormProps) {
 
   return (
     <Card className="w-full max-w-md shadow-xl border-0 card-elevated">
-      <CardHeader className="space-y-1 pb-6">
-        
-        <CardDescription className="text-center">
-          Sign in to your account or create a new one
-        </CardDescription>
-      </CardHeader>
+      <CardHeader className="space-y-1 pb-6" />
+
       <CardContent>
         <Tabs defaultValue="login" className="w-full pt-4">
           <TabsList className="grid w-full grid-cols-2 mb-6">
