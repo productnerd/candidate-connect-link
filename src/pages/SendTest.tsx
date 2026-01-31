@@ -356,7 +356,7 @@ export default function SendTest() {
                 <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
                   {/* Your Information Section */}
                   <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Your Information</h3>
+                    <h3 className="font-semibold text-muted-foreground uppercase tracking-wide">Your Information</h3>
                     
                     {/* Your Name */}
                     <div className="space-y-2">
@@ -418,7 +418,7 @@ export default function SendTest() {
 
                   {/* Candidate Information Section */}
                   <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Candidate Information</h3>
+                    <h3 className="font-semibold text-muted-foreground uppercase tracking-wide">Candidate Information</h3>
                     
                     {/* Candidate Name */}
                     <div className="space-y-2">
