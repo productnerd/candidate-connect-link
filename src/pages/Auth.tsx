@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { useAuth } from '@/hooks/useAuth';
 import { Brain, Building2, User } from 'lucide-react';
+import authBg from '@/assets/auth-bg.png';
 
 export default function Auth() {
   const { role = 'candidate' } = useParams<{ role?: 'employer' | 'candidate' }>();
@@ -29,11 +30,17 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-hero-pattern relative overflow-hidden">
+      {/* Left side - Background Image */}
+      <div 
+        className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${authBg})` }}
+      >
+        {/* Overlay for text readability */}
+        <div className="absolute inset-0 bg-foreground/60" />
+        
         <div className="relative z-10 flex flex-col justify-between p-12 text-primary-foreground">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/20">
+            <div className="p-2 rounded-lg bg-primary/20 backdrop-blur-sm">
               <Brain className="h-8 w-8" />
             </div>
             <span className="text-2xl font-bold">CCAT Platform</span>
@@ -83,10 +90,6 @@ export default function Auth() {
             © 2026 CCAT Platform. All rights reserved.
           </div>
         </div>
-
-        {/* Decorative elements */}
-        <div className="absolute top-20 right-20 w-64 h-64 rounded-full bg-primary/10 blur-3xl"></div>
-        <div className="absolute bottom-20 right-40 w-48 h-48 rounded-full bg-accent/10 blur-3xl"></div>
       </div>
 
       {/* Right side - Auth Form */}
