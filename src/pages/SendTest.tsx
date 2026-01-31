@@ -410,19 +410,30 @@ export default function SendTest() {
                 </div>
 
                 {/* Submit Button */}
-                <Button type="submit" variant="hero" disabled={sending} className="w-full h-12">
-                  {sending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="mr-2 h-4 w-4" />
-                      Send Test Invitation
-                    </>
-                  )}
-                </Button>
+                <div className="space-y-3">
+                  <Button type="submit" variant="hero" disabled={sending} className="w-full h-12">
+                    {sending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Send Test Invitation
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => navigate('/practice')}
+                  >
+                    <Brain className="mr-2 h-4 w-4" />
+                    Try a Practice Test Yourself
+                  </Button>
+                </div>
               </form>
             </CardContent>
           </Card>
