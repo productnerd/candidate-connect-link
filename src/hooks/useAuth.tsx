@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string, 
     metadata: { full_name: string; role: 'employer' | 'candidate'; organization_name?: string }
   ) => {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = `${window.location.origin}/auth/callback`;
     
     const { data, error } = await supabase.auth.signUp({
       email,

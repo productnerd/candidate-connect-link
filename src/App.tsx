@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import Dashboard from "./pages/Dashboard";
 import SendInvitation from "./pages/SendInvitation";
 import TestLibrary from "./pages/TestLibrary";
@@ -26,11 +27,28 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/:role" element={<Auth />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/practice" element={<Practice />} />
             <Route 
               path="/dashboard" 
               element={
                 <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/employer" 
+              element={
+                <ProtectedRoute requiredRole="employer">
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/candidate" 
+              element={
+                <ProtectedRoute requiredRole="candidate">
                   <Dashboard />
                 </ProtectedRoute>
               } 
