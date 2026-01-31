@@ -14,6 +14,7 @@ import {
   Play,
   Zap
 } from 'lucide-react';
+import employerHeroBg from '@/assets/employer-hero-bg.png';
 
 export default function Index() {
   const features = [
@@ -60,16 +61,15 @@ export default function Index() {
     <div className="min-h-screen flex flex-col bg-background text-foreground overflow-hidden">
       <Navbar />
       
-      {/* Hero Section - Full Screen with Glass Effects */}
+      {/* Hero Section - Full Screen with Background Image */}
       <section className="relative min-h-screen flex flex-col pt-16">
-        {/* Background with mesh gradient */}
-        <div className="absolute inset-0 bg-mesh" />
-        <div className="absolute inset-0 bg-grid opacity-30" />
-        
-        {/* Floating glass orbs */}
-        <div className="glass-orb-primary w-[600px] h-[600px] -top-40 -left-40 animate-pulse-glow" />
-        <div className="glass-orb-accent w-[500px] h-[500px] top-1/3 -right-40 animate-pulse-glow" style={{ animationDelay: '1.5s' }} />
-        <div className="glass-orb-primary w-[400px] h-[400px] bottom-20 left-1/4 animate-pulse-glow" style={{ animationDelay: '3s' }} />
+        {/* Background image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${employerHeroBg})` }}
+        />
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-foreground/40" />
         
         {/* Main Hero Content */}
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center pt-20 pb-32 px-4">
