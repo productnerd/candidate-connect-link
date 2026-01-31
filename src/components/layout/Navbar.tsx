@@ -18,6 +18,8 @@ export function Navbar() {
 
   // Determine if we're on the candidate landing page
   const isCandidateLanding = location.pathname === '/practice';
+  // Determine if we're on the employer landing page
+  const isEmployerLanding = location.pathname === '/employer' || location.pathname === '/';
   // Determine if we're on the dashboard
   const isDashboard = location.pathname.startsWith('/dashboard');
 
@@ -46,7 +48,7 @@ export function Navbar() {
     <nav className="absolute top-0 left-0 right-0 z-50 w-full">
       <div className="container flex h-20 items-center justify-between">
         {/* Logo */}
-        <Link to={isCandidateLanding ? '/practice' : '/'} className="flex items-center gap-2">
+        <Link to={isCandidateLanding ? '/practice' : '/employer'} className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-primary">
             <Brain className="h-5 w-5 text-primary-foreground" />
           </div>
