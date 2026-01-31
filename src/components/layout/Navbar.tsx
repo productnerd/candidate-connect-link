@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { Brain, LogOut, User, LayoutDashboard, Building2 } from 'lucide-react';
+import { Brain, LogOut, User, LayoutDashboard, ArrowRight } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,16 +36,42 @@ export function Navbar() {
       .slice(0, 2);
   };
 
+  const navItems = [
+    { label: 'Mission', href: '#mission' },
+    { label: 'How it Works', href: '#how-it-works' },
+    { label: 'Pricing', href: '#pricing' },
+  ];
+
   return (
-    <nav className="sticky top-0 z-50 w-full">
-      <div className="container flex h-16 items-center justify-between">
+    <nav className="absolute top-0 left-0 right-0 z-50 w-full">
+      <div className="container flex h-20 items-center justify-between">
+        {/* Logo */}
         <Link to={isCandidateLanding ? '/practice' : '/'} className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-primary">
             <Brain className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-lg font-bold">CCAT Platform</span>
+          <span className="text-lg font-display font-semibold text-foreground">CCAT<sup className="text-xs">™</sup></span>
         </Link>
 
+        {/* Centered Nav Pills */}
+        {!user && !isCandidateLanding && (
+          <div className="hidden md:flex items-center gap-1 bg-card/80 backdrop-blur-sm rounded-full p-1.5 border border-border/50 shadow-sm">
+            {navItems.map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                className="px-4 py-2 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              >
+                {item.label}
+              </a>
+            ))}
+            <Button size="sm" className="rounded-full ml-1" asChild>
+              <Link to="/auth/employer">Book a Demo</Link>
+            </Button>
+          </div>
+        )}
+
+        {/* Right Side */}
         <div className="flex items-center gap-4">
           {user ? (
             <>
@@ -98,32 +124,21 @@ export function Navbar() {
               </DropdownMenu>
             </>
           ) : (
-            <>
-              <div className="flex items-center gap-2 bg-muted rounded-full p-1">
-                <Link
-                  to="/"
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    !isCandidateLanding
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <Building2 className="h-3.5 w-3.5" />
-                  Business
-                </Link>
-                <Link
-                  to="/practice"
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    isCandidateLanding
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <User className="h-3.5 w-3.5" />
-                  Candidate
-                </Link>
-              </div>
-            </>
+            <div className="flex items-center gap-3">
+              <Link
+                to="/auth"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                New Account
+              </Link>
+              <Link
+                to="/auth"
+                className="flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-primary transition-colors"
+              >
+                <ArrowRight className="h-4 w-4" />
+                Login
+              </Link>
+            </div>
           )}
         </div>
       </div>
