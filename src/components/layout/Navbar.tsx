@@ -67,9 +67,6 @@ export function Navbar() {
                 {item.label}
               </a>
             ))}
-            <Button size="sm" className="rounded-full ml-1" asChild>
-              <Link to="/auth/employer">Book a Demo</Link>
-            </Button>
           </div>
         )}
 
@@ -127,12 +124,29 @@ export function Navbar() {
             </>
           ) : (
             <div className="flex items-center gap-3">
-              <Link
-                to="/auth"
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                New Account
-              </Link>
+              {/* Business / Candidate Toggle */}
+              <div className="flex items-center bg-muted/50 rounded-full p-1 border border-border/50">
+                <Link
+                  to="/employer"
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    isEmployerLanding
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Business
+                </Link>
+                <Link
+                  to="/practice"
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    isCandidateLanding
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Candidate
+                </Link>
+              </div>
               <Link
                 to="/auth"
                 className="flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-primary transition-colors"
