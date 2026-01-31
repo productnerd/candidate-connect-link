@@ -49,6 +49,9 @@ const App = () => (
             {/* Anonymous send test flow (no auth required) */}
             <Route path="/send-test" element={<SendTest />} />
             
+            {/* Practice landing (alias for /candidate) */}
+            <Route path="/practice" element={<Practice />} />
+            
             {/* Candidate practice test flow (doesn't require auth) */}
             <Route path="/candidate/start" element={<StartPracticeTest />} />
             <Route path="/candidate/session/:sessionId" element={<PracticeSession />} />
