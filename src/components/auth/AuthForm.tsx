@@ -104,7 +104,7 @@ export function AuthForm({ role }: AuthFormProps) {
             We've sent a magic link to <strong className="text-foreground">{sentEmail}</strong>
           </p>
           <Button 
-            variant="default" 
+            variant="hero" 
             onClick={() => {
               setMagicLinkSent(false);
               setSentEmail('');
