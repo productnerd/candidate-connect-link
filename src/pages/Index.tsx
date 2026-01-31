@@ -101,7 +101,7 @@ export default function Index() {
                 </Link>
               </Button>
               <Button size="lg" variant="outline" className="rounded-2xl px-8 h-14 text-base glass-button border-0" asChild>
-                <Link to="/practice/start">
+                <Link to="/candidate/start">
                   <Play className="mr-2 h-5 w-5" />
                   Try Test
                 </Link>
@@ -131,7 +131,7 @@ export default function Index() {
                 <Link to="/auth/employer">Book a Demo</Link>
               </Button>
               <Link 
-                to="/practice" 
+                to="/candidate" 
                 className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
               >
                 Learn More →
@@ -277,7 +277,7 @@ export default function Index() {
               className="rounded-2xl px-8 h-14 border-background/20 text-background hover:bg-background/10 backdrop-blur-sm" 
               asChild
             >
-              <Link to="/practice/start">
+              <Link to="/candidate/start">
                 <Play className="mr-2 h-5 w-5" />
                 Try Test
               </Link>

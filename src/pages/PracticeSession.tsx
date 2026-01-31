@@ -84,18 +84,18 @@ export default function PracticeSession() {
 
   const loadSessionData = async () => {
     if (!sessionId) {
-      navigate('/practice', { replace: true });
+      navigate('/candidate', { replace: true });
       return;
     }
 
     const local = loadPracticeSession(sessionId);
     if (!local) {
-      navigate('/practice', { replace: true });
+      navigate('/candidate', { replace: true });
       return;
     }
 
     if (local.status === 'completed') {
-      navigate(`/practice/results/${sessionId}`, { replace: true });
+      navigate(`/candidate/results/${sessionId}`, { replace: true });
       return;
     }
 
@@ -142,7 +142,7 @@ export default function PracticeSession() {
         description: 'Failed to load practice test',
         variant: 'destructive',
       });
-      navigate('/practice', { replace: true });
+      navigate('/candidate', { replace: true });
     } finally {
       setLoading(false);
     }
@@ -240,7 +240,7 @@ export default function PracticeSession() {
         await document.exitFullscreen();
       }
 
-      navigate(`/practice/results/${sessionId}`, { replace: true });
+      navigate(`/candidate/results/${sessionId}`, { replace: true });
 
     } catch (err) {
       console.error('Error submitting test:', err);

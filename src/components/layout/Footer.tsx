@@ -24,7 +24,7 @@ export const Footer = React.forwardRef<HTMLElement, Record<string, never>>((_, r
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link to="/tests" className="hover:text-foreground transition-colors">Assessments</Link></li>
               <li><Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
-              <li><Link to="/practice" className="hover:text-foreground transition-colors">Practice Tests</Link></li>
+              <li><Link to="/candidate" className="hover:text-foreground transition-colors">Practice Tests</Link></li>
             </ul>
           </div>
 

@@ -18,7 +18,7 @@ export const Navbar = React.forwardRef<HTMLElement, Record<string, never>>((_, r
   const location = useLocation();
 
   // Determine if we're on the candidate landing page
-  const isCandidateLanding = location.pathname === '/practice';
+  const isCandidateLanding = location.pathname === '/candidate';
   // Determine if we're on the employer landing page
   const isEmployerLanding = location.pathname === '/employer' || location.pathname === '/';
   // Determine if we're on the dashboard
@@ -49,7 +49,7 @@ export const Navbar = React.forwardRef<HTMLElement, Record<string, never>>((_, r
     <nav ref={ref} className="glass-nav">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link to={isCandidateLanding ? '/practice' : '/employer'} className="flex items-center gap-2.5 group">
+        <Link to={isCandidateLanding ? '/candidate' : '/employer'} className="flex items-center gap-2.5 group">
           <div className="p-2 rounded-xl bg-primary/10 border border-primary/20 backdrop-blur-sm transition-all group-hover:bg-primary/20 group-hover:scale-105">
             <Brain className="h-5 w-5 text-primary" />
           </div>
@@ -130,7 +130,7 @@ export const Navbar = React.forwardRef<HTMLElement, Record<string, never>>((_, r
                   Business
                 </Link>
                 <Link
-                  to="/practice"
+                  to="/candidate"
                   className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
                     isCandidateLanding
                       ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'

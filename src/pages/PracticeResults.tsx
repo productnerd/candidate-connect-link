@@ -34,14 +34,14 @@ export default function PracticeResults() {
 
   const loadResults = async () => {
     if (!sessionId) {
-      navigate('/practice', { replace: true });
+      navigate('/candidate', { replace: true });
       return;
     }
 
     try {
       const local = loadPracticeSession(sessionId);
       if (!local || !local.result) {
-        navigate('/practice', { replace: true });
+        navigate('/candidate', { replace: true });
         return;
       }
 
@@ -59,7 +59,7 @@ export default function PracticeResults() {
 
     } catch (err) {
       console.error('Error loading results:', err);
-      navigate('/practice', { replace: true });
+      navigate('/candidate', { replace: true });
     } finally {
       setLoading(false);
     }
@@ -185,7 +185,7 @@ export default function PracticeResults() {
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-4">
           <Button className="flex-1" size="lg" asChild>
-            <Link to="/practice/start">
+            <Link to="/candidate/start">
               <RotateCcw className="h-4 w-4 mr-2" />
               Try Another Practice Test
             </Link>

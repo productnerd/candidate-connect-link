@@ -57,7 +57,7 @@ export default function Practice() {
       variant: 'outline' as const,
       popular: false,
       icon: Gift,
-      href: '/practice/start',
+      href: '/candidate/start',
     },
     {
       name: 'Starter Pack',
@@ -144,7 +144,7 @@ export default function Practice() {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="xl" variant="accent" asChild className="group">
-                <Link to="/practice/start">
+                <Link to="/candidate/start">
                   Start Free Practice Test
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
@@ -302,7 +302,7 @@ export default function Practice() {
             Start with a free practice test and see where you stand.
           </p>
           <Button size="xl" variant="accent" asChild className="group">
-            <Link to="/practice/start">
+            <Link to="/candidate/start">
               Take Free Practice Test
               <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>

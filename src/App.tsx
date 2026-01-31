@@ -37,7 +37,7 @@ const App = () => (
             
             {/* Landing pages - redirect to dashboard if logged in */}
             <Route path="/employer" element={<PublicRoute><Index /></PublicRoute>} />
-            <Route path="/practice" element={<PublicRoute><Practice /></PublicRoute>} />
+            <Route path="/candidate" element={<PublicRoute><Practice /></PublicRoute>} />
             
             {/* Auth routes */}
             <Route path="/auth" element={<Auth />} />
@@ -45,10 +45,10 @@ const App = () => (
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
             
-            {/* Practice test flow (doesn't require auth) */}
-            <Route path="/practice/start" element={<StartPracticeTest />} />
-            <Route path="/practice/session/:sessionId" element={<PracticeSession />} />
-            <Route path="/practice/results/:sessionId" element={<PracticeResults />} />
+            {/* Candidate practice test flow (doesn't require auth) */}
+            <Route path="/candidate/start" element={<StartPracticeTest />} />
+            <Route path="/candidate/session/:sessionId" element={<PracticeSession />} />
+            <Route path="/candidate/results/:sessionId" element={<PracticeResults />} />
             
             {/* Invited test-taking routes (anonymous) */}
             <Route path="/test/:token" element={<TakeTest />} />

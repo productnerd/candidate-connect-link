@@ -117,7 +117,7 @@ export default function Auth() {
         {!isEmployer && (
           <div className="w-full max-w-md mb-6">
             <Link
-              to="/practice"
+              to="/candidate"
               className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               ← Back to Practice
