@@ -12,7 +12,6 @@ export default function Auth() {
   // Validate role parameter
   const validRole: 'employer' | 'candidate' = role === 'employer' ? 'employer' : 'candidate';
   const isEmployer = validRole === 'employer';
-  const alternateRole = isEmployer ? 'candidate' : 'employer';
 
   useEffect(() => {
     if (!loading && user) {
@@ -55,12 +54,11 @@ export default function Auth() {
             ) : (
               <>
                 <h1 className="text-4xl font-bold leading-tight">
-                  Ace your CCAT with<br />
-                  <span className="text-gradient-hero">practice that works</span>
+                  Welcome back to<br />
+                  <span className="text-gradient-hero">CCAT Platform</span>
                 </h1>
                 <p className="text-lg text-primary-foreground/80 max-w-md">
-                  Prepare for your cognitive aptitude test with realistic practice exams. 
-                  Build confidence, improve speed, and maximize your score.
+                  Sign in to view your test results, track your progress, and access your assessment history.
                 </p>
               </>
             )}
@@ -93,33 +91,39 @@ export default function Auth() {
 
       {/* Right side - Auth Form */}
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 bg-background">
-        {/* Role Toggle */}
-        <div className="w-full max-w-md mb-6">
-          <div className="flex items-center justify-center p-1 rounded-lg bg-muted">
+        {/* Role Toggle - Only show for employers (candidates can't toggle to employer signup) */}
+        {isEmployer && (
+          <div className="w-full max-w-md mb-6">
+            <div className="flex items-center justify-center p-1 rounded-lg bg-muted">
+              <Link
+                to="/auth/employer"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all bg-background shadow-sm text-foreground"
+              >
+                <Building2 className="h-4 w-4" />
+                I'm a Business
+              </Link>
+              <Link
+                to="/auth/candidate"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+              >
+                <User className="h-4 w-4" />
+                I'm a Candidate
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* For candidates, show a simple back link instead of toggle */}
+        {!isEmployer && (
+          <div className="w-full max-w-md mb-6">
             <Link
-              to="/auth/employer"
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                isEmployer 
-                  ? 'bg-background shadow-sm text-foreground' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              to="/practice"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              <Building2 className="h-4 w-4" />
-              I'm a Business
-            </Link>
-            <Link
-              to="/auth/candidate"
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                !isEmployer 
-                  ? 'bg-background shadow-sm text-foreground' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <User className="h-4 w-4" />
-              I'm a Candidate
+              ← Back to Practice
             </Link>
           </div>
-        </div>
+        )}
 
         <div className="w-full max-w-md">
           <div className="lg:hidden flex items-center justify-center gap-3 mb-8">

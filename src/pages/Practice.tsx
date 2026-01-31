@@ -57,6 +57,7 @@ export default function Practice() {
       variant: 'outline' as const,
       popular: false,
       icon: Gift,
+      href: '/practice/start',
     },
     {
       name: 'Starter Pack',
@@ -74,6 +75,7 @@ export default function Practice() {
       variant: 'default' as const,
       popular: false,
       icon: Brain,
+      href: '/auth/employer', // Paid bundles go to employer signup
     },
     {
       name: 'Pro Bundle',
@@ -92,6 +94,7 @@ export default function Practice() {
       variant: 'hero' as const,
       popular: true,
       icon: Crown,
+      href: '/auth/employer', // Paid bundles go to employer signup
     },
   ];
 
@@ -243,7 +246,7 @@ export default function Practice() {
                     size="lg"
                     asChild
                   >
-                    <Link to={bundle.price === '$0' ? '/practice/start' : '/auth/candidate'}>
+                    <Link to={bundle.href}>
                       {bundle.cta}
                     </Link>
                   </Button>

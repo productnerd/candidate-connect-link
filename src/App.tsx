@@ -55,27 +55,11 @@ const App = () => (
             <Route path="/test/:token/session/:sessionId" element={<TestSession />} />
             <Route path="/test/:token/results/:sessionId" element={<TestResults />} />
             
-            {/* Protected routes */}
+            {/* Protected routes - single dashboard route that renders based on role */}
             <Route 
               path="/dashboard" 
               element={
                 <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/dashboard/employer" 
-              element={
-                <ProtectedRoute requiredRole="employer">
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/dashboard/candidate" 
-              element={
-                <ProtectedRoute requiredRole="candidate">
                   <Dashboard />
                 </ProtectedRoute>
               } 
