@@ -170,7 +170,7 @@ export default function Practice() {
               </Button>
               <button 
                 onClick={() => setShowBundleModal(true)}
-                className="text-primary-foreground/80 hover:text-primary-foreground underline underline-offset-4 text-sm transition-colors"
+                className="text-background/80 hover:text-background underline underline-offset-4 text-sm hover:scale-105 transition-all duration-200"
               >
                 or purchase unlimited premium tests (€14)
               </button>
