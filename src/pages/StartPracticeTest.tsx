@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Brain } from 'lucide-react';
+import { createPracticeSession } from '@/lib/practiceSessionStorage';
 
 export default function StartPracticeTest() {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ export default function StartPracticeTest() {
           .select('*')
           .eq('is_active', true)
           .limit(1)
-          .single();
+          .maybeSingle();
 
         if (fallbackError) throw fallbackError;
         practiceTest = fallbackTest;
@@ -44,26 +45,20 @@ export default function StartPracticeTest() {
         return;
       }
 
-      // Create a practice session (no invitation needed)
-      const { data: session, error: sessionError } = await supabase
-        .from('test_sessions')
-        .insert({
-          test_id: practiceTest.id,
-          invitation_id: null, // Practice mode - no invitation
-          candidate_id: null,
-          session_type: 'practice',
-          status: 'in_progress',
-          time_remaining_seconds: practiceTest.duration_minutes * 60,
-          proctoring_enabled: false, // No proctoring for practice
-        })
-        .select()
-        .single();
+      // Create a local practice session (no account required)
+      const id =
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-      if (sessionError) throw sessionError;
+      createPracticeSession({
+        id,
+        testId: practiceTest.id,
+        durationSeconds: (practiceTest.duration_minutes ?? 15) * 60,
+      });
 
       // Navigate directly to fullscreen test session
-      // Using a special practice route that doesn't need a token
-      navigate(`/practice/session/${session.id}`, { replace: true });
+      navigate(`/practice/session/${id}`, { replace: true });
 
     } catch (err) {
       console.error('Error starting practice test:', err);
@@ -82,10 +77,10 @@ export default function StartPracticeTest() {
         <div className="text-center">
           <p className="text-destructive mb-4">{error}</p>
           <button 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/practice')}
             className="text-primary hover:underline"
           >
-            Return to Dashboard
+            Return to Practice
           </button>
         </div>
       </div>

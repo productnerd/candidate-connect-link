@@ -1,9 +1,10 @@
+import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Brain } from 'lucide-react';
 
-export function Footer() {
+export const Footer = React.forwardRef<HTMLElement, Record<string, never>>((_, ref) => {
   return (
-    <footer className="border-t bg-muted/30">
+    <footer ref={ref} className="border-t bg-muted/30">
       <div className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
@@ -51,4 +52,6 @@ export function Footer() {
       </div>
     </footer>
   );
-}
+});
+
+Footer.displayName = 'Footer';
