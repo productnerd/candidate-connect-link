@@ -11,7 +11,8 @@ import {
   Clock, 
   ArrowRight,
   Sparkles,
-  Play
+  Play,
+  Zap
 } from 'lucide-react';
 
 export default function Index() {
@@ -56,109 +57,137 @@ export default function Index() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
+    <div className="min-h-screen flex flex-col bg-background text-foreground overflow-hidden">
       <Navbar />
       
-      {/* Hero Section - Full Screen */}
-      <section className="relative min-h-screen flex flex-col overflow-hidden">
-        {/* Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/30 to-primary/5" />
+      {/* Hero Section - Full Screen with Glass Effects */}
+      <section className="relative min-h-screen flex flex-col pt-16">
+        {/* Background with mesh gradient */}
+        <div className="absolute inset-0 bg-mesh" />
+        <div className="absolute inset-0 bg-grid opacity-30" />
         
-        {/* Decorative elements */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-accent/10 blur-3xl" />
+        {/* Floating glass orbs */}
+        <div className="glass-orb-primary w-[600px] h-[600px] -top-40 -left-40 animate-pulse-glow" />
+        <div className="glass-orb-accent w-[500px] h-[500px] top-1/3 -right-40 animate-pulse-glow" style={{ animationDelay: '1.5s' }} />
+        <div className="glass-orb-primary w-[400px] h-[400px] bottom-20 left-1/4 animate-pulse-glow" style={{ animationDelay: '3s' }} />
         
         {/* Main Hero Content */}
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center pt-20 pb-32 px-4">
+          {/* Badge */}
+          <div className="glass-card px-4 py-2 mb-8 flex items-center gap-2">
+            <Zap className="h-4 w-4 text-accent" />
+            <span className="text-sm font-medium text-muted-foreground">AI-Powered Assessment Platform</span>
+          </div>
+          
           <div className="text-center max-w-5xl mx-auto">
-            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-light leading-[1.1] tracking-tight mb-8">
+            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-medium leading-[1.1] tracking-tight mb-8">
               Bridge the gap{' '}
-              <span className="text-primary">between</span>
+              <span className="text-gradient-primary">between</span>
               <br />
-              <span className="text-primary">talent</span> and decisions
+              <span className="text-gradient-hero">talent</span> and decisions
             </h1>
             
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
               Turn disconnected hiring data into actionable insights
               with AI-powered cognitive assessments.
             </p>
+            
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" className="rounded-2xl px-8 h-14 text-base shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" asChild>
+                <Link to="/auth/employer">
+                  Get Started Free
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" className="rounded-2xl px-8 h-14 text-base glass-button border-0" asChild>
+                <Link to="/practice/start">
+                  <Play className="mr-2 h-5 w-5" />
+                  Try Practice Test
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
         
-        {/* Bottom Left Info Card */}
+        {/* Bottom Glass Cards */}
         <div className="absolute bottom-8 left-8 z-20 max-w-sm hidden lg:block">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="p-1.5 rounded-lg bg-primary/10">
-              <Brain className="h-4 w-4 text-primary" />
+          <div className="glass-elevated p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-xl bg-primary/10 border border-primary/20">
+                <Brain className="h-5 w-5 text-primary" />
+              </div>
+              <span className="text-sm font-display font-semibold">CCATCore<sup className="text-xs text-primary">™</sup></span>
             </div>
-            <span className="text-sm font-semibold">CCATCore<sup className="text-xs">™</sup></span>
-          </div>
-          
-          <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-            CCAT seamlessly connects your hiring workflow, 
-            automating candidate assessment across platforms without the 
-            need for complex coding.
-          </p>
-          
-          <div className="flex items-center gap-4">
-            <Button size="sm" className="rounded-full" asChild>
-              <Link to="/auth/employer">Book a Demo</Link>
-            </Button>
-            <Link 
-              to="/practice" 
-              className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-            >
-              Learn More
-            </Link>
+            
+            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+              CCAT seamlessly connects your hiring workflow, 
+              automating candidate assessment across platforms without the 
+              need for complex coding.
+            </p>
+            
+            <div className="flex items-center gap-3">
+              <Button size="sm" className="rounded-xl shadow-md shadow-primary/20" asChild>
+                <Link to="/auth/employer">Book a Demo</Link>
+              </Button>
+              <Link 
+                to="/practice" 
+                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+              >
+                Learn More →
+              </Link>
+            </div>
           </div>
         </div>
         
         {/* Bottom Right Video Indicator */}
-        <div className="absolute bottom-8 right-8 z-20 hidden lg:flex items-center gap-3">
-          <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-            <Play className="h-3 w-3 fill-current" />
-            How it works?
-            <span className="text-muted-foreground/60">1:35</span>
-          </span>
-        </div>
-        
-        {/* Mobile CTA */}
-        <div className="lg:hidden relative z-20 px-4 pb-8">
-          <div className="flex flex-col gap-3">
-            <Button size="lg" className="w-full rounded-full" asChild>
-              <Link to="/auth/employer">
-                Get Started
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" className="w-full rounded-full" asChild>
-              <Link to="/practice">Try Practice Test</Link>
-            </Button>
+        <div className="absolute bottom-8 right-8 z-20 hidden lg:block">
+          <div className="glass-card p-4 flex items-center gap-3 cursor-pointer hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <Play className="h-4 w-4 text-primary fill-primary" />
+            </div>
+            <div>
+              <span className="text-sm font-medium block">How it works?</span>
+              <span className="text-xs text-muted-foreground">1:35</span>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Stats Section */}
-      <section id="mission" className="py-20 bg-card border-y border-border">
-        <div className="container">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="font-display text-4xl md:text-5xl font-light text-primary mb-2">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
-              </div>
-            ))}
+      <section id="mission" className="relative py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-mesh opacity-50" />
+        
+        <div className="container relative z-10">
+          <div className="glass-elevated p-8 md:p-12">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {stats.map((stat, index) => (
+                <div key={index} className="text-center">
+                  <div className="font-display text-4xl md:text-5xl font-medium text-gradient-primary mb-2">{stat.value}</div>
+                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-24 lg:py-32 bg-background">
-        <div className="container">
+      <section className="relative py-24 lg:py-32 overflow-hidden">
+        <div className="absolute inset-0 bg-mesh" />
+        
+        {/* Background orbs */}
+        <div className="glass-orb-accent w-[400px] h-[400px] top-1/4 -left-40 animate-pulse-glow" />
+        <div className="glass-orb-primary w-[300px] h-[300px] bottom-1/4 -right-20 animate-pulse-glow" style={{ animationDelay: '2s' }} />
+        
+        <div className="container relative z-10">
           <div className="text-center mb-16">
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-light mb-4">
+            <div className="glass-card inline-flex px-4 py-2 mb-6">
+              <span className="text-sm font-medium text-muted-foreground">Features</span>
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-medium mb-4">
               Everything you need for
-              <span className="text-primary"> better hiring</span>
+              <span className="text-gradient-primary"> better hiring</span>
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Our platform provides comprehensive tools for employers to assess candidates 
@@ -166,13 +195,13 @@ export default function Index() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => (
               <div 
                 key={index} 
-                className="group p-8 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-lg transition-all duration-300"
+                className="glass-card p-8 hover-lift group"
               >
-                <div className="inline-flex p-3 rounded-xl bg-primary/10 text-primary mb-5 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                <div className="inline-flex p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary mb-5 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all duration-300">
                   <feature.icon className="h-6 w-6" />
                 </div>
                 <h3 className="font-display text-xl font-medium mb-3">{feature.title}</h3>
@@ -184,10 +213,15 @@ export default function Index() {
       </section>
 
       {/* How It Works Section */}
-      <section id="how-it-works" className="py-24 lg:py-32 bg-muted/30">
-        <div className="container">
+      <section id="how-it-works" className="relative py-24 lg:py-32 overflow-hidden">
+        <div className="absolute inset-0 bg-mesh opacity-50" />
+        
+        <div className="container relative z-10">
           <div className="text-center mb-16">
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-light mb-4">
+            <div className="glass-card inline-flex px-4 py-2 mb-6">
+              <span className="text-sm font-medium text-muted-foreground">Process</span>
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-medium mb-4">
               How it works
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -195,14 +229,14 @@ export default function Index() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {[
               { step: '01', title: 'Create Account', description: 'Sign up as an employer and set up your organization in under 2 minutes.' },
               { step: '02', title: 'Send Invitations', description: 'Invite candidates via email with unique test links that you control.' },
               { step: '03', title: 'Review Results', description: 'Get detailed scores and percentile rankings to make informed decisions.' },
             ].map((item, index) => (
-              <div key={index} className="text-center">
-                <div className="font-mono text-5xl font-light text-primary/30 mb-4">
+              <div key={index} className="glass-elevated p-8 text-center hover-lift">
+                <div className="font-mono text-5xl font-light text-gradient-primary mb-4">
                   {item.step}
                 </div>
                 <h3 className="font-display text-xl font-medium mb-3">{item.title}</h3>
@@ -214,23 +248,36 @@ export default function Index() {
       </section>
 
       {/* CTA Section */}
-      <section id="pricing" className="py-24 lg:py-32 bg-foreground text-background">
-        <div className="container text-center">
-          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-light mb-6">
+      <section id="pricing" className="relative py-24 lg:py-32 overflow-hidden">
+        {/* Dark glass background */}
+        <div className="absolute inset-0 bg-foreground" />
+        <div className="absolute inset-0 bg-mesh opacity-30" />
+        
+        {/* Glowing orbs */}
+        <div className="absolute w-[500px] h-[500px] rounded-full bg-primary/20 blur-[120px] -top-40 left-1/4 animate-pulse-glow" />
+        <div className="absolute w-[400px] h-[400px] rounded-full bg-accent/15 blur-[100px] bottom-0 right-1/4 animate-pulse-glow" style={{ animationDelay: '2s' }} />
+        
+        <div className="container relative z-10 text-center">
+          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-medium mb-6 text-background">
             Ready to hire smarter?
           </h2>
           <p className="text-lg text-background/70 mb-10 max-w-xl mx-auto">
             Join thousands of companies using CCAT assessments to find top talent.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" className="rounded-full" asChild>
+            <Button size="lg" className="rounded-2xl px-8 h-14 bg-background text-foreground hover:bg-background/90 shadow-xl" asChild>
               <Link to="/auth/employer">
                 Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="rounded-full border-background/20 text-background hover:bg-background/10" asChild>
-              <Link to="/practice">Try Practice Test</Link>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="rounded-2xl px-8 h-14 border-background/20 text-background hover:bg-background/10 backdrop-blur-sm" 
+              asChild
+            >
+              <Link to="/practice/start">Try Practice Test</Link>
             </Button>
           </div>
         </div>
