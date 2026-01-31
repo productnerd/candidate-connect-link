@@ -1,230 +1,257 @@
 
 
-# Database Schema Redesign for Question Bank & Test System
+# Candidate Dashboard Enhancement Plan
 
 ## Overview
-
-This plan restructures the database to support a unified question bank with pool tagging, separated tests, proper scoring (raw score without percentages), and dynamic percentile calculation.
-
-## Current State Analysis
-
-**Existing Structure:**
-- `test_library`: Contains test definitions (CCAT, Verbal Reasoning, etc.)
-- `test_questions`: Questions directly linked to tests via `test_id`
-- `test_results`: Stores `score`, `percentage`, and `percentile`
-- `test_sessions`: Tracks test-taking progress
-
-**Issues with Current Design:**
-- Questions are tightly coupled to tests (can't be reused)
-- No question pool tagging (basic/premium/official)
-- No question category tagging (Math & Logic, Verbal Reasoning, Spatial Reasoning)
-- Percentage is stored but you want raw score only
-- No support for max 50 questions per test via junction table
+This plan transforms the Candidate Dashboard from a simple test history view into a comprehensive practice hub for users who have purchased the Unlimited Bundle. The dashboard will feature score analytics, mock tests, and a new "Learning Mode" for practicing without time pressure.
 
 ---
 
-## Proposed Database Changes
-
-### 1. Create New Enum: `question_pool`
-
-```text
-Values: basic, premium, official
-```
-
-- **basic**: Free practice tests for candidates
-- **premium**: Paid tests for candidates with unlimited bundle
-- **official**: Questions used in employer-sent assessments
-
-### 2. Create New Enum: `question_category`
-
-```text
-Values: math_logic, verbal_reasoning, spatial_reasoning
-```
-
-This replaces the current `question_type` which is about format (multiple_choice, true_false).
-
-### 3. Modify `test_questions` Table
-
-**Add columns:**
-- `pool` (question_pool enum, default 'basic')
-- `category` (question_category enum, NOT NULL)
-- `image_url` (text, nullable) - optional image under question text
-
-**Remove column:**
-- `test_id` (foreign key) - will use junction table instead
-
-**Modify column:**
-- `options` constraint: ensure 2-6 options
-
-### 4. Create Junction Table: `test_question_links`
-
-```text
-id             uuid PRIMARY KEY
-test_id        uuid REFERENCES test_library(id)
-question_id    uuid REFERENCES test_questions(id)
-order_number   integer (1-50)
-created_at     timestamp
-
-UNIQUE(test_id, question_id)
-CHECK: max 50 links per test
-```
-
-This allows:
-- Questions to be reused across multiple tests
-- Maximum of 50 questions per test
-- Ordered question presentation
-
-### 5. Modify `test_results` Table
-
-**Remove column:**
-- `percentage` (will be calculated on-the-fly)
-
-**Keep column:**
-- `percentile` (but don't store it - calculate dynamically)
-- Actually, remove `percentile` too since you want dynamic calculation
-
-**Modify column:**
-- `score` remains as raw score (number of correct answers)
-
-### 6. Add Category Breakdown to Results
-
-The `category_scores` JSONB column already exists. We'll use it to store:
-```json
-{
-  "math_logic": { "correct": 15, "total": 18 },
-  "verbal_reasoning": { "correct": 14, "total": 18 },
-  "spatial_reasoning": { "correct": 12, "total": 14 }
-}
-```
+## Current State
+- Dashboard shows pending employer test invitations and test history
+- Practice tests use local sessionStorage for state
+- Results are not persisted to the database for anonymous users
+- 9 premium-pool questions exist in the database
+- Some questions already have explanations, but many are missing
 
 ---
 
-## Data Flow
+## Feature Summary
+
+### 1. Score Analytics Section
+A prominent chart showing test performance over time, with category breakdowns.
+
+### 2. Mock Test Mode
+Timed tests using premium questions, identical UX to free tests but pulling from the premium pool.
+
+### 3. Learning Test Mode
+Untimed practice with immediate feedback and explanations after each answer.
+
+### 4. Pro Tip Toast
+When submitting a mock test with more than one unanswered question, display a toast recommending random answers over blanks.
+
+---
+
+## Database Changes
+
+### Schema Migration
+
+1. **Add `explanation` field verification**
+   - The `test_questions` table already has an `explanation` column
+   - Populate missing explanations with sample text for existing questions
+
+2. **Create `candidate_test_history` table**
+   Store practice test results for authenticated users (separate from employer-visible `test_results`):
+   
+   ```text
+   candidate_test_history
+   +------------------+-------------------+
+   | Column           | Type              |
+   +------------------+-------------------+
+   | id               | uuid (PK)         |
+   | user_id          | uuid (FK profiles)|
+   | session_id       | uuid              |
+   | test_type        | text              | -- 'mock' | 'learning' | 'free'
+   | score            | integer           |
+   | total_questions  | integer           |
+   | time_taken_seconds| integer          |
+   | category_scores  | jsonb             |
+   | completed_at     | timestamptz       |
+   | created_at       | timestamptz       |
+   +------------------+-------------------+
+   ```
+
+3. **RLS Policies for `candidate_test_history`**
+   - Users can only see/insert their own records
+   - Admins can see all
+
+---
+
+## New Pages and Components
+
+### 1. Enhanced CandidateDashboard.tsx
 
 ```text
-+------------------+          +---------------------+
-|  test_questions  |          |    test_library     |
-|------------------|          |---------------------|
-| id               |          | id                  |
-| question_text    |          | name                |
-| options (2-6)    |<-------->| slug                |
-| correct_answer   |   via    | duration_minutes    |
-| category         |  links   | question_count (50) |
-| pool             |          | ...                 |
-| image_url        |          +---------------------+
-+------------------+                   |
-         ^                             |
-         |                             v
-         |                  +---------------------+
-         |                  | test_question_links |
-         +------------------+---------------------|
-                            | test_id             |
-                            | question_id         |
-                            | order_number        |
-                            +---------------------+
++-----------------------------------------------+
+|  Navbar                                       |
++-----------------------------------------------+
+|  Welcome back, [Name]!                        |
+|                                               |
+|  [Pending Tests Section - kept small]         |
+|  (if any exist)                               |
++-----------------------------------------------+
+|  YOUR PROGRESS                                |
+|  +-------------------------------------------+|
+|  |        Score Over Time Chart              ||
+|  |  (line chart showing % scores by date)   ||
+|  +-------------------------------------------+|
+|                                               |
+|  Category Breakdown                           |
+|  [Math/Logic: 75%] [Verbal: 68%] [Spatial: 82%]|
++-----------------------------------------------+
+|  START PRACTICING                             |
+|  +-------------------+  +-------------------+ |
+|  |   Mock Test       |  |   Learning Mode   | |
+|  |   5 questions     |  |   No timer        | |
+|  |   [Start Mock]    |  |   [Start Learn]   | |
+|  +-------------------+  +-------------------+ |
++-----------------------------------------------+
+|  RECENT TESTS                                 |
+|  (list of recent practice sessions)           |
++-----------------------------------------------+
 ```
+
+### 2. New Learning Test Session Page
+Create `src/pages/LearningSession.tsx`:
+- Similar structure to PracticeSession but:
+  - No timer displayed (no time pressure)
+  - After selecting an answer, immediately show:
+    - Whether it was correct/incorrect
+    - The explanation for the correct answer
+  - "Next Question" button instead of auto-advance
+  - Results page shows score without time taken
+
+### 3. Modified PracticeSession.tsx
+- Add logic to detect incomplete questions on submit
+- Show toast when more than 1 question is unanswered:
+  "PRO TIP: Better pick a random answer instead of leaving questions unanswered."
+
+### 4. Mock Test Start Flow
+Create route `/candidate/mock` that:
+- Fetches 5 random questions from `pool = 'premium'`
+- Creates a dynamic test session (not linked to test_library)
+- Uses the same PracticeSession component
+
+---
+
+## Route Changes
+
+| Route | Page | Purpose |
+|-------|------|---------|
+| `/candidate/mock` | StartMockTest.tsx | Initialize mock test with random premium questions |
+| `/candidate/learn` | StartLearningTest.tsx | Initialize learning mode session |
+| `/candidate/learn/session/:id` | LearningSession.tsx | Learning mode question interface |
+| `/candidate/learn/results/:id` | LearningResults.tsx | Learning mode results (no time shown) |
+
+---
+
+## Implementation Sequence
+
+### Phase 1: Database Setup
+1. Create migration for `candidate_test_history` table with RLS
+2. Update existing `test_questions` with mock explanations where missing
+
+### Phase 2: Dashboard Redesign
+1. Refactor CandidateDashboard.tsx layout
+2. Add score history chart using Recharts (already installed)
+3. Add "Start Mock Test" and "Start Learning Mode" cards
+4. Keep pending tests section but make it smaller/collapsible
+
+### Phase 3: Mock Test Feature
+1. Create StartMockTest.tsx to fetch random premium questions
+2. Store temporary question set in sessionStorage
+3. Update PracticeSession to handle dynamic question sets
+4. Add "Pro Tip" toast on submission with incomplete questions
+5. Save results to `candidate_test_history` on completion
+
+### Phase 4: Learning Mode
+1. Create LearningSession.tsx with:
+   - No timer UI
+   - Answer reveal after selection
+   - Explanation display component
+   - Next button instead of auto-advance
+2. Create LearningResults.tsx (similar to PracticeResults but no time stats)
+3. Create StartLearningTest.tsx
+
+### Phase 5: History Integration
+1. Query `candidate_test_history` for chart data
+2. Attempt to match anonymous free test scores by checking if user email matches any `test_results` records (fallback)
+3. Display recent tests in dashboard
 
 ---
 
 ## Technical Details
 
-### Migration Steps
+### Chart Component
+Using existing Recharts dependency:
+```tsx
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-1. **Create new enums:**
-   - `question_pool`: 'basic', 'premium', 'official'
-   - `question_category`: 'math_logic', 'verbal_reasoning', 'spatial_reasoning'
+// Data format:
+const chartData = [
+  { date: '1/15', score: 65 },
+  { date: '1/20', score: 72 },
+  { date: '1/25', score: 78 },
+];
+```
 
-2. **Add columns to test_questions:**
-   - `pool question_pool DEFAULT 'basic'`
-   - `category question_category NOT NULL` (will set default for migration)
-   - `image_url text`
-
-3. **Create test_question_links junction table**
-
-4. **Migrate existing data:**
-   - Copy existing `test_id` relationships to `test_question_links`
-   - Set category based on existing questions (infer from content or set default)
-
-5. **Drop test_id column from test_questions** (after migration)
-
-6. **Update test_results:**
-   - Remove `percentage` column (calculate as `score / total * 100` in UI)
-   - Remove `percentile` column (calculate dynamically by comparing scores)
-
-7. **Update RLS policies for new junction table**
-
-### Percentile Calculation (UI-side)
-
+### Random Question Selection
 ```typescript
-// Query to calculate percentile dynamically
-const calculatePercentile = async (testId: string, userScore: number) => {
-  const { count: totalResults } = await supabase
-    .from('test_results')
-    .select('*', { count: 'exact', head: true })
-    .eq('test_id', testId);
-    
-  const { count: belowScore } = await supabase
-    .from('test_results')
-    .select('*', { count: 'exact', head: true })
-    .eq('test_id', testId)
-    .lt('score', userScore);
-    
-  return Math.round((belowScore / totalResults) * 100);
+const { data } = await supabase
+  .from('test_questions')
+  .select('*')
+  .eq('pool', 'premium')
+  .limit(20); // Fetch more than needed
+
+// Shuffle and take 5
+const shuffled = data.sort(() => Math.random() - 0.5);
+const selected = shuffled.slice(0, 5);
+```
+
+### Pro Tip Toast Logic
+```typescript
+// In handleSubmit of PracticeSession
+const unanswered = questions.length - answers.filter(a => a.answer).length;
+if (unanswered > 1) {
+  toast({
+    title: "PRO TIP",
+    description: "Better pick a random answer instead of leaving questions unanswered.",
+    duration: 5000,
+  });
+}
+```
+
+### Learning Mode Answer Reveal
+```typescript
+const [revealedAnswer, setRevealedAnswer] = useState(false);
+
+const handleAnswer = (answer: string) => {
+  // Save answer
+  setRevealedAnswer(true);
+  // Show correct/incorrect + explanation
 };
 ```
 
-### Question Distribution per Test (50 questions)
-- Math & Logic: 18 questions
-- Verbal Reasoning: 18 questions
-- Spatial Reasoning: 14 questions
-- **Total: 50 questions**
+---
+
+## Sample Explanations to Add
+For questions without explanations, add educational mock text:
+
+| Question Type | Sample Explanation |
+|---------------|-------------------|
+| Math/Speed calculation | "Distance divided by time gives average speed. Here: 240 / 4 = 60 mph." |
+| Ratio problems | "In a 3:5 ratio with 24 total, divide 24 by 8 parts, then multiply by each ratio." |
+| Verbal analogies | "Architect creates blueprints for buildings; composers create scores for music." |
+| Pattern recognition | "Look for multiplication, addition patterns, or common sequences like squares." |
 
 ---
 
-## Frontend Updates Required
+## Files to Create/Modify
 
-After the database changes, these files will need updates:
-
-1. **PracticeSession.tsx** / **TestSession.tsx**
-   - Query questions via junction table
-   - Remove percentage from result submission
-
-2. **PracticeResults.tsx** / **TestResults.tsx**
-   - Calculate percentage on-the-fly: `(score / totalQuestions) * 100`
-   - Add percentile calculation by querying other results
-   - Display raw score prominently
-   - Show category breakdown
-
-3. **StartPracticeTest.tsx**
-   - May need to handle question randomization from pool
+| File | Action | Purpose |
+|------|--------|---------|
+| `supabase/migrations/xxx.sql` | Create | candidate_test_history table + RLS |
+| `src/pages/CandidateDashboard.tsx` | Modify | Complete redesign with chart + action cards |
+| `src/pages/StartMockTest.tsx` | Create | Mock test initialization |
+| `src/pages/LearningSession.tsx` | Create | Learning mode test interface |
+| `src/pages/LearningResults.tsx` | Create | Learning mode results display |
+| `src/pages/StartLearningTest.tsx` | Create | Learning mode initialization |
+| `src/pages/PracticeSession.tsx` | Modify | Add pro tip toast logic |
+| `src/App.tsx` | Modify | Add new routes |
+| `src/lib/practiceSessionStorage.ts` | Modify | Add learning mode session type |
 
 ---
 
-## RLS Policies for New Table
-
-```sql
--- test_question_links
--- SELECT: Anyone can view links for active tests
-CREATE POLICY "links_select" ON test_question_links
-FOR SELECT USING (
-  EXISTS (
-    SELECT 1 FROM test_library tl
-    WHERE tl.id = test_id AND tl.is_active = true
-  ) OR is_admin(auth.uid())
-);
-
--- INSERT/UPDATE/DELETE: Admin only
-```
-
----
-
-## Summary of Changes
-
-| Table | Change Type | Details |
-|-------|-------------|---------|
-| test_questions | Modify | Add pool, category, image_url; Remove test_id |
-| test_question_links | Create | Junction table for test-question relationships |
-| test_results | Modify | Remove percentage and percentile columns |
-| question_pool | Create | New enum for pool tagging |
-| question_category | Create | New enum for category tagging |
+## Access Control
+The dashboard remains accessible only to authenticated users with the candidate role. Bundle verification is handled by checking for `candidate_unlimited` bundle ownership before allowing mock/learning tests (or simply trust that only bundle owners reach this page per existing routing).
 
