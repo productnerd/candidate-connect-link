@@ -93,21 +93,30 @@ export function Navbar() {
             </>
           ) : (
             <>
-              {isCandidateLanding ? (
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/">
-                    <Building2 className="h-4 w-4 mr-2" />
-                    I'm a Business
-                  </Link>
-                </Button>
-              ) : (
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/practice">
-                    <User className="h-4 w-4 mr-2" />
-                    I'm a Candidate
-                  </Link>
-                </Button>
-              )}
+              <div className="flex items-center gap-2 bg-muted rounded-full p-1">
+                <Link
+                  to="/"
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    !isCandidateLanding
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Building2 className="h-3.5 w-3.5" />
+                  Business
+                </Link>
+                <Link
+                  to="/practice"
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    isCandidateLanding
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <User className="h-3.5 w-3.5" />
+                  Candidate
+                </Link>
+              </div>
             </>
           )}
         </div>
