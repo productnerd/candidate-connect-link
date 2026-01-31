@@ -103,7 +103,7 @@ export default function CandidateDashboard() {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container py-8">
+      <main className="container pt-24 pb-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Candidate Dashboard</h1>
