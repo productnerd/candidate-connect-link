@@ -23,6 +23,12 @@ import TestSession from "./pages/TestSession";
 import TestResults from "./pages/TestResults";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import NotFound from "./pages/NotFound";
+import StartMockTest from "./pages/StartMockTest";
+import MockSession from "./pages/MockSession";
+import MockResults from "./pages/MockResults";
+import StartLearningTest from "./pages/StartLearningTest";
+import LearningSession from "./pages/LearningSession";
+import LearningResults from "./pages/LearningResults";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +66,16 @@ const App = () => (
             <Route path="/candidate/start" element={<StartPracticeTest />} />
             <Route path="/candidate/session/:sessionId" element={<PracticeSession />} />
             <Route path="/candidate/results/:sessionId" element={<PracticeResults />} />
+            
+            {/* Mock test routes (requires auth) */}
+            <Route path="/candidate/mock" element={<ProtectedRoute><StartMockTest /></ProtectedRoute>} />
+            <Route path="/candidate/mock/session/:sessionId" element={<ProtectedRoute><MockSession /></ProtectedRoute>} />
+            <Route path="/candidate/mock/results/:sessionId" element={<ProtectedRoute><MockResults /></ProtectedRoute>} />
+            
+            {/* Learning mode routes (requires auth) */}
+            <Route path="/candidate/learn" element={<ProtectedRoute><StartLearningTest /></ProtectedRoute>} />
+            <Route path="/candidate/learn/session/:sessionId" element={<ProtectedRoute><LearningSession /></ProtectedRoute>} />
+            <Route path="/candidate/learn/results/:sessionId" element={<ProtectedRoute><LearningResults /></ProtectedRoute>} />
             
             {/* Invited test-taking routes (anonymous) */}
             <Route path="/test/:token" element={<TakeTest />} />

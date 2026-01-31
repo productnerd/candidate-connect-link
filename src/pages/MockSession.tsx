@@ -7,12 +7,14 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { QuestionOptions } from '@/components/test/QuestionOptions';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   Loader2, 
   ChevronLeft, 
   ChevronRight, 
   Flag,
-  ArrowLeft
+  ArrowLeft,
+  Zap
 } from 'lucide-react';
 import type { Tables, Json } from '@/integrations/supabase/types';
 import {
@@ -22,33 +24,29 @@ import {
   type PracticeSessionState,
 } from '@/lib/practiceSessionStorage';
 
-type TestLibrary = Tables<'test_library'>;
 type TestQuestion = Tables<'test_questions'>;
 
-export default function PracticeSession() {
+export default function MockSession() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<PracticeSessionState | null>(null);
-  const [test, setTest] = useState<TestLibrary | null>(null);
   const [questions, setQuestions] = useState<TestQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<PracticeAnswer[]>([]);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  // Load local session + fetch test/questions
+  const autoSubmitRef = useRef<() => void>(() => {});
+
   useEffect(() => {
     loadSessionData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
-  // Auto-submit ref to avoid stale closure in timer
-  const autoSubmitRef = useRef<() => void>(() => {});
-
-  // Timer with auto-submit
   useEffect(() => {
     if (timeRemaining <= 0 || submitting) return;
 
@@ -56,7 +54,6 @@ export default function PracticeSession() {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          // Use ref to call latest handleSubmit
           autoSubmitRef.current();
           return 0;
         }
@@ -69,23 +66,32 @@ export default function PracticeSession() {
 
   const loadSessionData = async () => {
     if (!sessionId) {
-      navigate('/candidate', { replace: true });
+      navigate('/dashboard', { replace: true });
       return;
     }
 
     const local = loadPracticeSession(sessionId);
     if (!local) {
-      navigate('/candidate', { replace: true });
+      navigate('/dashboard', { replace: true });
       return;
     }
 
     if (local.status === 'completed') {
-      navigate(`/candidate/results/${sessionId}`, { replace: true });
+      navigate(`/candidate/mock/results/${sessionId}`, { replace: true });
       return;
     }
 
     try {
-      // Hydrate local session
+      // Get stored question IDs
+      const storedQuestionIds = sessionStorage.getItem(`mock_questions:${sessionId}`);
+      if (!storedQuestionIds) {
+        navigate('/dashboard', { replace: true });
+        return;
+      }
+
+      const questionIds: string[] = JSON.parse(storedQuestionIds);
+
+      // Hydrate session
       const startedAtMs = new Date(local.startedAt).getTime();
       const elapsed = Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000));
       const remaining = Math.max(0, local.durationSeconds - elapsed);
@@ -101,64 +107,44 @@ export default function PracticeSession() {
       setAnswers(Array.isArray(hydrated.answers) ? hydrated.answers : []);
       savePracticeSession(sessionId, hydrated);
 
-      // Ensure a backend session exists for this practice run.
-      // RLS for questions requires an in-progress session row for anonymous users.
-      const { error: ensureSessionError } = await supabase
+      // Create backend session for RLS
+      await supabase
         .from('test_sessions')
-        .upsert(
-          {
-            id: sessionId,
-            test_id: hydrated.testId,
-            session_type: 'practice',
-            status: 'in_progress',
-            candidate_id: null,
-            start_time: new Date().toISOString(),
-            current_question_index: hydrated.currentIndex || 0,
-            time_remaining_seconds: remaining,
-            answers: (Array.isArray(hydrated.answers) ? hydrated.answers : []) as unknown as Json,
-            proctoring_enabled: false,
-            proctoring_consent_given: false,
-          },
-          { onConflict: 'id' },
-        );
+        .upsert({
+          id: sessionId,
+          test_id: 'ede289ed-48bf-4be9-9aaa-e8f5b1fec47e', // Reference test for RLS
+          session_type: 'practice',
+          status: 'in_progress',
+          candidate_id: null,
+          start_time: new Date().toISOString(),
+          current_question_index: hydrated.currentIndex || 0,
+          time_remaining_seconds: remaining,
+          answers: (Array.isArray(hydrated.answers) ? hydrated.answers : []) as unknown as Json,
+          proctoring_enabled: false,
+        }, { onConflict: 'id' });
 
-      if (ensureSessionError) throw ensureSessionError;
-
-      // Fetch test
-      const { data: testData, error: testError } = await supabase
-        .from('test_library')
+      // Fetch questions by IDs
+      const { data: questionsData, error: questionsError } = await supabase
+        .from('test_questions')
         .select('*')
-        .eq('id', hydrated.testId)
-        .single();
+        .in('id', questionIds);
 
-      if (testError) throw testError;
-      setTest(testData);
+      if (questionsError) throw questionsError;
 
-      // Fetch questions via junction table
-      const { data: linksData, error: linksError } = await supabase
-        .from('test_question_links')
-        .select(`
-          order_number,
-          question:test_questions(*)
-        `)
-        .eq('test_id', hydrated.testId)
-        .order('order_number', { ascending: true });
+      // Sort to match original order
+      const sortedQuestions = questionIds
+        .map(id => questionsData?.find(q => q.id === id))
+        .filter((q): q is TestQuestion => q !== undefined);
 
-      if (linksError) throw linksError;
-      
-      // Extract questions from links and flatten
-      const questionsData = (linksData || [])
-        .map(link => link.question)
-        .filter((q): q is TestQuestion => q !== null);
-      setQuestions(questionsData || []);
+      setQuestions(sortedQuestions);
     } catch (err) {
       console.error('Error loading session:', err);
       toast({
         title: 'Error',
-        description: 'Failed to load practice test',
+        description: 'Failed to load mock test',
         variant: 'destructive',
       });
-      navigate('/candidate', { replace: true });
+      navigate('/dashboard', { replace: true });
     } finally {
       setLoading(false);
     }
@@ -176,9 +162,8 @@ export default function PracticeSession() {
     savePracticeSession(sessionId, next);
   }, [answers, currentIndex, session, sessionId, timeRemaining]);
 
-  // Auto-save progress
   useEffect(() => {
-    const interval = setInterval(saveProgress, 30000); // Every 30 seconds
+    const interval = setInterval(saveProgress, 30000);
     return () => clearInterval(interval);
   }, [saveProgress]);
 
@@ -230,7 +215,6 @@ export default function PracticeSession() {
     try {
       saveProgress();
 
-      // Calculate score
       let correctCount = 0;
       questions.forEach((q) => {
         const answer = answers.find((a) => a.questionId === q.id);
@@ -243,7 +227,8 @@ export default function PracticeSession() {
         ? Math.round((correctCount / questions.length) * 100) 
         : 0;
 
-      // Persist completion locally
+      const timeTaken = 5 * 60 - timeRemaining;
+
       if (sessionId && session) {
         const next: PracticeSessionState = {
           ...session,
@@ -254,15 +239,29 @@ export default function PracticeSession() {
           result: {
             score: correctCount,
             percentage,
-            timeTakenSeconds: (test?.duration_minutes ?? 15) * 60 - timeRemaining,
+            timeTakenSeconds: timeTaken,
             completedAt: new Date().toISOString(),
           },
         };
         setSession(next);
         savePracticeSession(sessionId, next);
-      }
-      navigate(`/candidate/results/${sessionId}`, { replace: true });
 
+        // Save to candidate_test_history
+        if (user) {
+          await supabase.from('candidate_test_history').insert({
+            user_id: user.id,
+            session_id: sessionId,
+            test_type: 'mock',
+            score: correctCount,
+            total_questions: questions.length,
+            time_taken_seconds: timeTaken,
+            category_scores: {},
+            completed_at: new Date().toISOString(),
+          });
+        }
+      }
+
+      navigate(`/candidate/mock/results/${sessionId}`, { replace: true });
     } catch (err) {
       console.error('Error submitting test:', err);
       toast({
@@ -275,7 +274,6 @@ export default function PracticeSession() {
     }
   };
 
-  // Keep autoSubmitRef updated with latest handleSubmit
   useEffect(() => {
     autoSubmitRef.current = handleSubmit;
   });
@@ -292,9 +290,7 @@ export default function PracticeSession() {
     return answers.find((a) => a.questionId === currentQuestion.id);
   };
 
-  const isCurrentFlagged = () => {
-    return getCurrentAnswer()?.flagged || false;
-  };
+  const isCurrentFlagged = () => getCurrentAnswer()?.flagged || false;
 
   if (loading) {
     return (
@@ -314,22 +310,23 @@ export default function PracticeSession() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card border-b px-4 py-3">
         <div className="max-w-4xl mx-auto">
-          {/* Top row: Exit, Practice Mode + Timer (centered), Submit */}
           <div className="flex items-center justify-between">
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => navigate('/practice')}
+              onClick={() => navigate('/dashboard')}
             >
               <ArrowLeft className="h-3 w-3 mr-1" />
               Exit
             </Button>
 
-            {/* Centered: Practice Mode + Timer stacked */}
             <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center mt-1">
-              <Badge variant="outline" className="font-mono uppercase text-[10px] tracking-wider mb-1">
-                Practice Mode
-              </Badge>
+              <div className="flex items-center gap-1 mb-1">
+                <Zap className="h-3 w-3 text-primary" />
+                <Badge variant="outline" className="font-mono uppercase text-[10px] tracking-wider">
+                  Mock Test
+                </Badge>
+              </div>
               <div className={`font-mono text-lg transition-colors duration-300 ${
                 timeRemaining < 10 
                   ? 'text-primary animate-pulse' 
@@ -370,7 +367,6 @@ export default function PracticeSession() {
         <div className="max-w-4xl mx-auto">
           <Card>
             <CardContent className="pt-6">
-              {/* Question Header */}
               <div className="flex items-center justify-between mb-6">
                 <span className="text-sm font-medium text-muted-foreground">
                   Question {currentIndex + 1} of {questions.length}
@@ -385,14 +381,12 @@ export default function PracticeSession() {
                 </Button>
               </div>
 
-              {/* Question Text */}
               <div className="mb-8">
                 <p className="text-xl font-medium leading-relaxed">
                   {currentQuestion?.question_text}
                 </p>
               </div>
 
-              {/* Options */}
               {currentQuestion?.question_type === 'multiple_choice' && options && (
                 <QuestionOptions
                   options={options}
@@ -402,7 +396,6 @@ export default function PracticeSession() {
                 />
               )}
 
-              {/* True/False */}
               {currentQuestion?.question_type === 'true_false' && (
                 <QuestionOptions
                   options={['True', 'False']}
@@ -413,7 +406,6 @@ export default function PracticeSession() {
             </CardContent>
           </Card>
 
-          {/* Navigation */}
           <div className="flex items-center justify-between mt-6">
             {currentIndex > 0 ? (
               <Button
