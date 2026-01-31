@@ -144,7 +144,7 @@ export default function Practice() {
         {/* Main Hero Content */}
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4">
           <div className="max-w-3xl mx-auto text-center text-primary-foreground">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-sm mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-background/20 backdrop-blur-sm text-sm mb-6 text-background">
               <Sparkles className="h-4 w-4" />
               <span>Join 10,000+ candidates who improved their scores</span>
             </div>
