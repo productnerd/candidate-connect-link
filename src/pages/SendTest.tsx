@@ -414,16 +414,17 @@ export default function SendTest() {
                       </>
                     )}
                   </Button>
-                  <div className="text-center">
+                  <p className="text-center text-sm text-muted-foreground">
+                    Want to see what candidates experience?{' '}
                     <a 
                       href="/practice"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs uppercase tracking-wider text-muted-foreground hover:underline hover:text-foreground transition-colors"
+                      className="text-primary hover:underline font-medium"
                     >
-                      Or try the test first
+                      Try the test yourself
                     </a>
-                  </div>
+                  </p>
                 </div>
               </form>
             </CardContent>
