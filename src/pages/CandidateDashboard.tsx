@@ -105,53 +105,9 @@ export default function CandidateDashboard() {
       
       <main className="container py-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Candidate Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back, {profile?.full_name || 'Candidate'}!</p>
-          </div>
-          <Button variant="outline" asChild>
-            <Link to="/practice">
-              <BookOpen className="h-4 w-4 mr-2" />
-              Practice Tests
-            </Link>
-          </Button>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid sm:grid-cols-3 gap-6 mb-8">
-          <Card className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Pending Tests</CardTitle>
-              <Clock className="h-4 w-4 text-warning" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-warning">{pendingTests.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">Awaiting completion</p>
-            </CardContent>
-          </Card>
-
-          <Card className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
-              <CheckCircle className="h-4 w-4 text-success" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-success">{completedTests.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">Tests finished</p>
-            </CardContent>
-          </Card>
-
-          <Card className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Invitations</CardTitle>
-              <ClipboardList className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-primary">{invitations.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">All time</p>
-            </CardContent>
-          </Card>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">Candidate Dashboard</h1>
+          <p className="text-muted-foreground">Welcome back, {profile?.full_name || 'Candidate'}!</p>
         </div>
 
         {/* Pending Tests */}
@@ -247,28 +203,6 @@ export default function CandidateDashboard() {
           </CardContent>
         </Card>
 
-        {/* Practice Tests CTA */}
-        <Card className="card-elevated mt-8 bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
-          <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-primary/10 text-primary">
-                <Trophy className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Prepare with Practice Tests</h3>
-                <p className="text-sm text-muted-foreground">
-                  Take unlimited practice runs to improve your score
-                </p>
-              </div>
-            </div>
-            <Button variant="outline" asChild>
-              <Link to="/practice">
-                Start Practicing
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
       </main>
     </div>
   );

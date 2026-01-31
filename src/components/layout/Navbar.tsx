@@ -18,6 +18,8 @@ export function Navbar() {
 
   // Determine if we're on the candidate landing page
   const isCandidateLanding = location.pathname === '/practice';
+  // Determine if we're on the dashboard
+  const isDashboard = location.pathname.startsWith('/dashboard');
 
   const handleSignOut = async () => {
     await signOut();
@@ -47,12 +49,14 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           {user ? (
             <>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/dashboard">
-                  <LayoutDashboard className="h-4 w-4 mr-2" />
-                  Dashboard
-                </Link>
-              </Button>
+              {!isDashboard && (
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/dashboard">
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    Dashboard
+                  </Link>
+                </Button>
+              )}
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -71,12 +75,14 @@ export function Navbar() {
                     <p className="text-xs text-primary capitalize">{profile?.role}</p>
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/dashboard" className="cursor-pointer">
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Dashboard
-                    </Link>
-                  </DropdownMenuItem>
+                  {!isDashboard && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard" className="cursor-pointer">
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link to="/settings" className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
