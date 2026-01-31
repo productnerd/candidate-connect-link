@@ -16,24 +16,24 @@ export default function StartPracticeTest() {
 
   const startPracticeSession = async () => {
     try {
-      // Get the CCAT practice test (or first available test)
+      // Get the first free practice test
       const { data: test, error: testError } = await supabase
         .from('test_library')
         .select('*')
         .eq('is_active', true)
-        .eq('slug', 'ccat-cognitive')
+        .eq('slug', 'firstfreetest')
         .maybeSingle();
 
       if (testError) throw testError;
 
-      // Fallback to any active test if CCAT not found
+      // Fallback to CCAT test if firstfreetest not found
       let practiceTest = test;
       if (!practiceTest) {
         const { data: fallbackTest, error: fallbackError } = await supabase
           .from('test_library')
           .select('*')
           .eq('is_active', true)
-          .limit(1)
+          .eq('slug', 'ccat-cognitive')
           .maybeSingle();
 
         if (fallbackError) throw fallbackError;
