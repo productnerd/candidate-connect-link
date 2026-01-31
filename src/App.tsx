@@ -12,6 +12,9 @@ import Dashboard from "./pages/Dashboard";
 import SendInvitation from "./pages/SendInvitation";
 import TestLibrary from "./pages/TestLibrary";
 import Practice from "./pages/Practice";
+import TakeTest from "./pages/TakeTest";
+import TestSession from "./pages/TestSession";
+import TestResults from "./pages/TestResults";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +32,10 @@ const App = () => (
             <Route path="/auth/:role" element={<Auth />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/practice" element={<Practice />} />
+            {/* Anonymous test-taking routes */}
+            <Route path="/test/:token" element={<TakeTest />} />
+            <Route path="/test/:token/session/:sessionId" element={<TestSession />} />
+            <Route path="/test/:token/results/:sessionId" element={<TestResults />} />
             <Route 
               path="/dashboard" 
               element={

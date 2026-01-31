@@ -45,6 +45,7 @@ export default function SendInvitation() {
   const [tests, setTests] = useState<TestOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [createdInvitation, setCreatedInvitation] = useState<{ token: string; name: string } | null>(null);
 
   const form = useForm<InvitationFormData>({
     resolver: zodResolver(invitationSchema),
@@ -109,12 +110,12 @@ export default function SendInvitation() {
 
       if (error) throw error;
 
-      toast.success('Invitation sent successfully!', {
-        description: `An assessment invitation has been prepared for ${data.candidateName}`,
+      // Show the invitation link
+      setCreatedInvitation({ token, name: data.candidateName });
+      
+      toast.success('Invitation created successfully!', {
+        description: `Copy the link below to share with ${data.candidateName}`,
       });
-
-      // Navigate back to dashboard
-      navigate('/dashboard');
     } catch (error: any) {
       console.error('Error sending invitation:', error);
       toast.error('Failed to send invitation', {
