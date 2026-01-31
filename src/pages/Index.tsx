@@ -75,7 +75,7 @@ export default function Index() {
           <source src="/videos/hero-bg.mp4" type="video/mp4" />
         </video>
         {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-foreground/50" />
+        <div className="absolute inset-0 bg-foreground/60" />
         
         {/* Main Hero Content */}
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center pt-20 pb-32 px-4">
@@ -93,7 +93,7 @@ export default function Index() {
               <span className="text-gradient-hero">talent</span> and decisions
             </h1>
             
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
+            <p className="text-lg md:text-xl text-background/90 max-w-2xl mx-auto mb-12">
               Turn disconnected hiring data into actionable insights
               with AI-powered cognitive assessments.
             </p>
