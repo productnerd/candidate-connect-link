@@ -140,44 +140,59 @@ export type Database = {
         Row: {
           candidate_email: string
           candidate_name: string | null
+          company_logo_url: string | null
+          company_name: string | null
           completed_at: string | null
           created_at: string | null
           expires_at: string
           id: string
           invitation_token: string
           invited_by: string | null
+          inviter_email: string | null
+          inviter_name: string | null
           organization_id: string
           started_at: string | null
           status: Database["public"]["Enums"]["invitation_status"] | null
           test_id: string
+          test_type: string | null
         }
         Insert: {
           candidate_email: string
           candidate_name?: string | null
+          company_logo_url?: string | null
+          company_name?: string | null
           completed_at?: string | null
           created_at?: string | null
           expires_at: string
           id?: string
           invitation_token: string
           invited_by?: string | null
+          inviter_email?: string | null
+          inviter_name?: string | null
           organization_id: string
           started_at?: string | null
           status?: Database["public"]["Enums"]["invitation_status"] | null
           test_id: string
+          test_type?: string | null
         }
         Update: {
           candidate_email?: string
           candidate_name?: string | null
+          company_logo_url?: string | null
+          company_name?: string | null
           completed_at?: string | null
           created_at?: string | null
           expires_at?: string
           id?: string
           invitation_token?: string
           invited_by?: string | null
+          inviter_email?: string | null
+          inviter_name?: string | null
           organization_id?: string
           started_at?: string | null
           status?: Database["public"]["Enums"]["invitation_status"] | null
           test_id?: string
+          test_type?: string | null
         }
         Relationships: [
           {
@@ -478,6 +493,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_candidate_cooldown: {
+        Args: { recipient_email: string; sender_email: string }
+        Returns: boolean
+      }
+      check_sender_daily_limit: {
+        Args: { sender_email: string }
+        Returns: boolean
+      }
       get_user_email: { Args: { _user_id: string }; Returns: string }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
