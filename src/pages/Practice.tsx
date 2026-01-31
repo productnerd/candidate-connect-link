@@ -76,7 +76,7 @@ export default function Practice() {
   const bundles = [
     {
       name: 'Free Practice',
-      price: '$0',
+      price: '€0',
       description: 'Try before you buy',
       tests: 1,
       features: [
@@ -92,41 +92,25 @@ export default function Practice() {
       href: '/candidate/start',
     },
     {
-      name: 'Starter Pack',
-      price: '$19',
-      description: 'Perfect for focused prep',
-      tests: 5,
+      name: 'Unlimited Bundle',
+      price: '€14',
+      description: 'Best value for serious prep',
+      tests: 0, // Unlimited
       features: [
-        '5 full-length practice tests',
+        'Unlimited practice tests',
         'Detailed score analytics',
         'Category breakdowns',
-        'Performance tracking',
-        '30-day access',
-      ],
-      cta: 'Get Starter Pack',
-      variant: 'default' as const,
-      popular: false,
-      icon: Brain,
-      href: '/auth/employer', // Paid bundles go to employer signup
-    },
-    {
-      name: 'Pro Bundle',
-      price: '$39',
-      description: 'Most popular choice',
-      tests: 15,
-      features: [
-        '15 full-length practice tests',
-        'Advanced analytics dashboard',
         'Percentile comparisons',
         'Weakness identification',
         'Study recommendations',
-        '90-day access',
+        'Lifetime access',
       ],
-      cta: 'Get Pro Bundle',
+      cta: 'Get Unlimited Access',
       variant: 'hero' as const,
       popular: true,
-      icon: Crown,
-      href: '/auth/employer', // Paid bundles go to employer signup
+      icon: Infinity,
+      href: '#', // Will trigger checkout modal
+      isCheckout: true,
     },
   ];
 
@@ -246,7 +230,7 @@ export default function Practice() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {bundles.map((bundle, index) => (
               <Card 
                 key={index} 
@@ -256,7 +240,7 @@ export default function Practice() {
               >
                 {bundle.popular && (
                   <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground">
-                    Most Popular
+                    Best Value
                   </Badge>
                 )}
                 <CardHeader className="text-center pb-4">
@@ -267,9 +251,14 @@ export default function Practice() {
                   <CardDescription>{bundle.description}</CardDescription>
                   <div className="mt-4">
                     <span className="text-4xl font-bold">{bundle.price}</span>
-                    {bundle.tests > 1 && (
+                    {bundle.tests === 1 && (
                       <span className="text-muted-foreground ml-2">
-                        / {bundle.tests} tests
+                        / 1 test
+                      </span>
+                    )}
+                    {bundle.tests === 0 && (
+                      <span className="text-muted-foreground ml-2">
+                        / unlimited
                       </span>
                     )}
                   </div>
@@ -283,15 +272,26 @@ export default function Practice() {
                       </li>
                     ))}
                   </ul>
-                  <Button 
-                    variant={bundle.variant} 
-                    className="w-full mt-6" 
-                    asChild
-                  >
-                    <Link to={bundle.href}>
-                      {bundle.cta}
-                    </Link>
-                  </Button>
+                  {bundle.isCheckout ? (
+                    <Button 
+                      variant={bundle.variant} 
+                      className="w-full mt-6"
+                      onClick={handleCandidateCheckout}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Loading...' : bundle.cta}
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant={bundle.variant} 
+                      className="w-full mt-6" 
+                      asChild
+                    >
+                      <Link to={bundle.href}>
+                        {bundle.cta}
+                      </Link>
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))}
