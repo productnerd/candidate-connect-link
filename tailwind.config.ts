@@ -19,7 +19,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["DM Mono", "monospace"],
+        sans: ["Instrument Serif", "Georgia", "serif"],
         display: ["Instrument Serif", "Georgia", "serif"],
         mono: ["JetBrains Mono", "monospace"],
       },
