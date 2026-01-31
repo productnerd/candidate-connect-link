@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -46,15 +46,19 @@ export default function PracticeSession() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
-  // Timer
+  // Auto-submit ref to avoid stale closure in timer
+  const autoSubmitRef = useRef<() => void>(() => {});
+
+  // Timer with auto-submit
   useEffect(() => {
-    if (timeRemaining <= 0) return;
+    if (timeRemaining <= 0 || submitting) return;
 
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          handleSubmit();
+          // Use ref to call latest handleSubmit
+          autoSubmitRef.current();
           return 0;
         }
         return prev - 1;
@@ -62,7 +66,7 @@ export default function PracticeSession() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeRemaining]);
+  }, [timeRemaining, submitting]);
 
   const loadSessionData = async () => {
     if (!sessionId) {
@@ -230,6 +234,11 @@ export default function PracticeSession() {
     }
   };
 
+  // Keep autoSubmitRef updated with latest handleSubmit
+  useEffect(() => {
+    autoSubmitRef.current = handleSubmit;
+  });
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -263,37 +272,36 @@ export default function PracticeSession() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card border-b px-4 py-3">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Top row: Exit, Timer, Submit */}
+          <div className="flex items-center justify-between">
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => navigate('/practice')}
             >
-              <ArrowLeft className="h-4 w-4 mr-1" />
+              <ArrowLeft className="h-3 w-3 mr-1" />
               Exit
             </Button>
-            <Badge variant="outline" className="font-mono">
+
+            <Badge variant="outline" className="font-mono uppercase text-[10px] tracking-wider">
               Practice Mode
             </Badge>
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              {answeredCount}/{questions.length} answered
-            </span>
-          </div>
 
-          <div className="flex items-center gap-4">
-            <div className={`flex items-center gap-2 font-mono text-lg ${timeRemaining < 60 ? 'text-destructive animate-pulse' : ''}`}>
-              <Clock className="h-5 w-5" />
-              {formatTime(timeRemaining)}
+            <div className="flex items-center gap-4">
+              <div className={`flex items-center gap-2 font-mono text-lg ${timeRemaining < 60 ? 'text-destructive animate-pulse' : ''}`}>
+                <Clock className="h-5 w-5" />
+                {formatTime(timeRemaining)}
+              </div>
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={handleSubmit}
+                disabled={submitting}
+              >
+                {submitting ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Submit'}
+              </Button>
             </div>
-            <Button 
-              variant="destructive" 
-              size="sm"
-              onClick={handleSubmit}
-              disabled={submitting}
-            >
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit'}
-            </Button>
           </div>
         </div>
       </header>
@@ -302,6 +310,11 @@ export default function PracticeSession() {
       <div className="px-4 py-2 bg-muted/30">
         <div className="max-w-4xl mx-auto">
           <Progress value={progress} className="h-2" />
+          <div className="flex justify-end mt-1">
+            <span className="text-xs text-muted-foreground font-mono">
+              {answeredCount}/{questions.length} answered
+            </span>
+          </div>
         </div>
       </div>
 
