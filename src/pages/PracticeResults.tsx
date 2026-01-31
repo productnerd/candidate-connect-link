@@ -184,16 +184,16 @@ export default function PracticeResults() {
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-4">
-          <Button className="flex-1" size="lg" asChild>
+          <Button className="flex-1" asChild>
             <Link to="/candidate/start">
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Try Another Practice Test
+              <RotateCcw className="h-3 w-3 mr-2" />
+              Try Another Test
             </Link>
           </Button>
-          <Button variant="outline" className="flex-1" size="lg" asChild>
+          <Button variant="outline" className="flex-1" asChild>
             <Link to="/dashboard">
-              <Home className="h-4 w-4 mr-2" />
-              Back to Dashboard
+              <Home className="h-3 w-3 mr-2" />
+              Dashboard
             </Link>
           </Button>
         </div>

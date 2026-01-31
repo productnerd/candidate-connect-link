@@ -318,19 +318,19 @@ export default function TakeTest() {
           {/* Start Button */}
           <Button 
             className="w-full" 
-            size="lg" 
+            variant="hero"
             onClick={startTest}
             disabled={starting}
           >
             {starting ? (
               <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Starting...
               </>
             ) : (
               <>
                 Begin Test
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-2 h-4 w-4" />
               </>
             )}
           </Button>

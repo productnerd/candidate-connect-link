@@ -400,29 +400,30 @@ export default function SendTest() {
                 </div>
 
                 {/* Submit Button */}
-                <div className="space-y-3">
-                  <Button type="submit" variant="hero" disabled={sending} className="w-full h-12">
+                <div className="space-y-4">
+                  <Button type="submit" variant="hero" disabled={sending} className="w-full">
                     {sending ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
                         Sending...
                       </>
                     ) : (
                       <>
-                        <Send className="mr-2 h-4 w-4" />
+                        <Send className="mr-2 h-3 w-3" />
                         Send Test Invitation
                       </>
                     )}
                   </Button>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => navigate('/practice')}
-                  >
-                    <Brain className="mr-2 h-4 w-4" />
-                    Try a Practice Test Yourself
-                  </Button>
+                  <div className="text-center">
+                    <a 
+                      href="/practice"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs uppercase tracking-wider text-muted-foreground hover:underline hover:text-foreground transition-colors"
+                    >
+                      Or try the test first
+                    </a>
+                  </div>
                 </div>
               </form>
             </CardContent>
