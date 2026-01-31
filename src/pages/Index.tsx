@@ -100,15 +100,15 @@ export default function Index() {
             
             {/* CTA Buttons - Send Test and Try Test */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="rounded-2xl px-8 h-14 text-base shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" asChild>
+              <Button variant="hero" asChild>
                 <Link to="/send-test">
                   Send Test
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="rounded-2xl px-8 h-14 text-base glass-button border-0" asChild>
+              <Button variant="glass" asChild>
                 <Link to="/candidate/start">
-                  <Play className="mr-2 h-5 w-5" />
+                  <Play className="mr-2 h-4 w-4" />
                   Try Test
                 </Link>
               </Button>
@@ -271,20 +271,19 @@ export default function Index() {
             Join thousands of companies using CCAT assessments to find top talent.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="rounded-2xl px-8 h-14 bg-background text-foreground hover:bg-background/90 shadow-xl" asChild>
+            <Button variant="secondary" asChild>
               <Link to="/send-test">
                 Send Test
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
             <Button 
-              size="lg" 
               variant="outline" 
-              className="rounded-2xl px-8 h-14 border-background/20 text-background hover:bg-background/10 backdrop-blur-sm" 
+              className="border-background/20 text-background hover:bg-background/10 backdrop-blur-sm" 
               asChild
             >
               <Link to="/candidate/start">
-                <Play className="mr-2 h-5 w-5" />
+                <Play className="mr-2 h-4 w-4" />
                 Try Test
               </Link>
             </Button>

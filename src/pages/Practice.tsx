@@ -153,13 +153,13 @@ export default function Practice() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="xl" variant="accent" asChild className="group">
+              <Button variant="accent" asChild className="group">
                 <Link to="/candidate/start">
                   Start Free Practice Test
-                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
-              <Button size="xl" variant="outline" asChild className="bg-white/10 border-white/20 text-primary-foreground hover:bg-white/20">
+              <Button variant="outline" asChild className="bg-white/10 border-white/20 text-primary-foreground hover:bg-white/20">
                 <a href="#bundles">View All Bundles</a>
               </Button>
             </div>
@@ -249,7 +249,6 @@ export default function Practice() {
                   <Button 
                     variant={bundle.variant} 
                     className="w-full mt-6" 
-                    size="lg"
                     asChild
                   >
                     <Link to={bundle.href}>
@@ -307,10 +306,10 @@ export default function Practice() {
           <p className="text-lg text-primary-foreground/80 mb-8 max-w-xl mx-auto">
             Start with a free practice test and see where you stand.
           </p>
-          <Button size="xl" variant="accent" asChild className="group">
+          <Button variant="accent" asChild className="group">
             <Link to="/candidate/start">
               Take Free Practice Test
-              <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </Button>
         </div>
