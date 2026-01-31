@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -38,10 +38,37 @@ export default function PracticeResults() {
   const [session, setSession] = useState<PracticeSessionState | null>(null);
   const [test, setTest] = useState<TestLibrary | null>(null);
   const [showBundleModal, setShowBundleModal] = useState(false);
+  const [displayedScore, setDisplayedScore] = useState(0);
+  const animationStarted = useRef(false);
 
   useEffect(() => {
     loadResults();
   }, [sessionId]);
+
+  // Score count-up animation (2 seconds)
+  useEffect(() => {
+    if (session?.result && !animationStarted.current) {
+      animationStarted.current = true;
+      const targetScore = session.result.percentage;
+      const duration = 2000; // 2 seconds
+      const startTime = Date.now();
+      
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // Easing function for smooth deceleration
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const currentScore = Math.round(easeOut * targetScore);
+        setDisplayedScore(currentScore);
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+      
+      requestAnimationFrame(animate);
+    }
+  }, [session]);
 
   const loadResults = async () => {
     if (!sessionId) {
@@ -131,7 +158,7 @@ export default function PracticeResults() {
           <CardContent className="pt-6">
             <div className="text-center mb-6">
               <div className={`text-[10rem] leading-none font-display font-bold mb-2 ${getScoreColor(result.percentage)}`}>
-                {result.percentage}%
+                {displayedScore}%
               </div>
               <Badge variant="secondary" className="text-lg px-4 py-1">
                 {getScoreLabel(result.percentage)}
@@ -139,7 +166,7 @@ export default function PracticeResults() {
             </div>
 
             <Progress 
-              value={result.percentage} 
+              value={displayedScore} 
               className="h-4 mb-6" 
             />
 
@@ -198,10 +225,6 @@ export default function PracticeResults() {
                 <span className="font-medium">{completionRate}%</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Accuracy Rate</span>
-                <span className="font-medium">{result.percentage}%</span>
-              </div>
-              <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Avg. Time per Question</span>
                 <span className="font-medium">
                    {formatTime(Math.round((result.timeTakenSeconds || 0) / test.question_count))}
@@ -212,15 +235,15 @@ export default function PracticeResults() {
         </Card>
 
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button className="flex-1" asChild>
+        <div className="flex flex-col gap-3">
+          <Button className="w-full" asChild>
             <Link to="/candidate/start">
               <RotateCcw className="h-3 w-3 mr-2" />
               Try One More Test
             </Link>
           </Button>
           {user ? (
-            <Button variant="outline" className="flex-1" asChild>
+            <Button variant="outline" className="w-full" asChild>
               <Link to="/dashboard">
                 <Home className="h-3 w-3 mr-2" />
                 Dashboard
@@ -229,7 +252,7 @@ export default function PracticeResults() {
           ) : (
             <Button 
               variant="outline" 
-              className="flex-1"
+              className="w-full"
               onClick={() => setShowBundleModal(true)}
             >
               <Sparkles className="h-3 w-3 mr-2" />
