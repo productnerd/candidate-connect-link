@@ -6,11 +6,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Clock, Brain, AlertCircle, CheckCircle, ArrowRight, ExternalLink, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { Tables } from '@/integrations/supabase/types';
 import { formatDistanceToNow, differenceInDays, differenceInHours } from 'date-fns';
 
-type TestInvitation = Tables<'test_invitations'>;
-type TestLibrary = Tables<'test_library'>;
+interface InvitationData {
+  id: string;
+  test_id: string;
+  candidate_name: string | null;
+  candidate_email: string;
+  company_name: string | null;
+  company_logo_url: string | null;
+  inviter_name: string | null;
+  expires_at: string;
+  status: string | null;
+}
+
+interface TestData {
+  id: string;
+  name: string;
+  description: string | null;
+  duration_minutes: number;
+  question_count: number;
+  category: string;
+  difficulty_level: string | null;
+  requires_proctoring: boolean | null;
+}
 
 export default function TakeTest() {
   const { token } = useParams<{ token: string }>();
@@ -18,8 +37,8 @@ export default function TakeTest() {
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
-  const [invitation, setInvitation] = useState<TestInvitation | null>(null);
-  const [test, setTest] = useState<TestLibrary | null>(null);
+  const [invitation, setInvitation] = useState<InvitationData | null>(null);
+  const [test, setTest] = useState<TestData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
 
@@ -35,46 +54,26 @@ export default function TakeTest() {
     }
 
     try {
-      // Fetch invitation by token
-      const { data: invitationData, error: invError } = await supabase
-        .from('test_invitations')
-        .select('*')
-        .eq('invitation_token', token)
-        .maybeSingle();
+      // Use edge function to validate invitation (bypasses RLS securely)
+      const { data, error: funcError } = await supabase.functions.invoke('validate-invitation', {
+        body: { token }
+      });
 
-      if (invError) throw invError;
-
-      if (!invitationData) {
-        setError('Invitation not found or has been revoked');
+      if (funcError) {
+        console.error('Edge function error:', funcError);
+        setError('Failed to validate invitation');
         setLoading(false);
         return;
       }
 
-      // Check expiration
-      if (new Date(invitationData.expires_at) < new Date()) {
-        setError('This invitation has expired');
+      if (data.error) {
+        setError(data.error);
         setLoading(false);
         return;
       }
 
-      // Check if already completed
-      if (invitationData.status === 'completed') {
-        setError('You have already completed this test');
-        setLoading(false);
-        return;
-      }
-
-      setInvitation(invitationData);
-
-      // Fetch test details
-      const { data: testData, error: testError } = await supabase
-        .from('test_library')
-        .select('*')
-        .eq('id', invitationData.test_id)
-        .single();
-
-      if (testError) throw testError;
-      setTest(testData);
+      setInvitation(data.invitation);
+      setTest(data.test);
 
     } catch (err) {
       console.error('Error validating invitation:', err);
@@ -85,44 +84,35 @@ export default function TakeTest() {
   };
 
   const startTest = async () => {
-    if (!invitation || !test) return;
+    if (!invitation || !test || !token) return;
 
     setStarting(true);
     try {
-      // Create a test session
-      const { data: session, error: sessionError } = await supabase
-        .from('test_sessions')
-        .insert({
-          test_id: test.id,
-          invitation_id: invitation.id,
-          candidate_id: null, // Anonymous
-          session_type: 'invited',
-          status: 'in_progress',
-          time_remaining_seconds: test.duration_minutes * 60,
-          proctoring_enabled: test.requires_proctoring,
-        })
-        .select()
-        .single();
+      // Use edge function to start test (bypasses RLS securely)
+      const { data, error: funcError } = await supabase.functions.invoke('start-invited-test', {
+        body: { 
+          token,
+          invitationId: invitation.id,
+          testId: test.id
+        }
+      });
 
-      if (sessionError) throw sessionError;
+      if (funcError) {
+        throw new Error(funcError.message);
+      }
 
-      // Update invitation status
-      await supabase
-        .from('test_invitations')
-        .update({ 
-          status: 'started',
-          started_at: new Date().toISOString()
-        })
-        .eq('id', invitation.id);
+      if (data.error) {
+        throw new Error(data.error);
+      }
 
       // Navigate to test interface
-      navigate(`/test/${token}/session/${session.id}`);
+      navigate(`/test/${token}/session/${data.sessionId}`);
 
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error starting test:', err);
       toast({
         title: 'Error',
-        description: 'Failed to start the test. Please try again.',
+        description: err.message || 'Failed to start the test. Please try again.',
         variant: 'destructive',
       });
     } finally {
