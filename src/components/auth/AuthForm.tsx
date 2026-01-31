@@ -103,9 +103,6 @@ export function AuthForm({ role }: AuthFormProps) {
           <p className="text-muted-foreground mb-6">
             We've sent a magic link to <strong className="text-foreground">{sentEmail}</strong>
           </p>
-          <p className="text-sm text-muted-foreground mb-6">
-            Click the link in your email to sign in. The link will expire in 1 hour.
-          </p>
           <Button 
             variant="outline" 
             onClick={() => {
