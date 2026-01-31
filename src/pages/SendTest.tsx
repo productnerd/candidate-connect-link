@@ -110,11 +110,6 @@ function EmailPreview({
             <p className="text-xs text-gray-500 mt-1">Duration: ~15 minutes</p>
           </div>
 
-          <div className="pt-2">
-            <div className="bg-primary text-primary-foreground text-center py-3 px-6 rounded-lg text-sm font-semibold">
-              Start Assessment →
-            </div>
-          </div>
 
           <p className="text-xs text-gray-400 pt-4 border-t border-gray-100">
             This invitation expires in 7 days. If you have any questions, please contact{' '}
