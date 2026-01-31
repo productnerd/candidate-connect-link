@@ -166,12 +166,11 @@ export default function TakeTest() {
               <AlertCircle className="h-6 w-6 text-destructive" />
             </div>
             <CardTitle>Unable to Access Test</CardTitle>
-            <CardDescription>{error}</CardDescription>
+            <CardDescription>
+              {error}. If you believe this is an error, please contact the person who sent you this invitation.
+            </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground mb-4">
-              If you believe this is an error, please contact the person who sent you this invitation.
-            </p>
             <Button variant="outline" onClick={() => navigate('/')}>
               Go to Homepage
             </Button>
