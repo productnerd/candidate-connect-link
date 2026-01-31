@@ -98,20 +98,22 @@ export default function Index() {
               with AI-powered cognitive assessments.
             </p>
             
-            {/* CTA Buttons - Send Test and Try Test */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {/* CTA - Send Test with secondary text link */}
+            <div className="flex flex-col items-center justify-center gap-3">
               <Button variant="hero" asChild>
                 <Link to="/send-test">
                   Send Test
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button variant="glass" asChild>
-                <Link to="/candidate/start">
-                  <Play className="mr-2 h-4 w-4" />
-                  Try Test
-                </Link>
-              </Button>
+              <a
+                href="/candidate/start"
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm text-background/90 underline underline-offset-4 hover:text-background transition-colors"
+              >
+                or try the test yourself
+              </a>
             </div>
           </div>
         </div>
@@ -270,23 +272,21 @@ export default function Index() {
           <p className="text-lg text-background/90 mb-10 max-w-xl mx-auto">
             Join thousands of companies using CCAT assessments to find top talent.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col items-center justify-center gap-3">
             <Button variant="secondary" asChild>
               <Link to="/send-test">
                 Send Test
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            <Button 
-              variant="outline" 
-              className="border-background/20 text-background hover:bg-background/10 backdrop-blur-sm" 
-              asChild
+            <a
+              href="/candidate/start"
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm text-background/90 underline underline-offset-4 hover:text-background transition-colors"
             >
-              <Link to="/candidate/start">
-                <Play className="mr-2 h-4 w-4" />
-                Try Test
-              </Link>
-            </Button>
+              or try the test yourself
+            </a>
           </div>
         </div>
       </section>
