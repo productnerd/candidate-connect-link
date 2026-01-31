@@ -110,8 +110,8 @@ export default function Index() {
           </div>
         </div>
         
-        {/* Bottom Glass Cards */}
-        <div className="absolute bottom-8 left-8 z-20 max-w-sm hidden lg:block">
+        {/* Bottom Glass Cards - Hidden for now */}
+        {/* <div className="absolute bottom-8 left-8 z-20 max-w-sm hidden lg:block">
           <div className="glass-elevated p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-xl bg-primary/10 border border-primary/20">
@@ -138,7 +138,7 @@ export default function Index() {
               </Link>
             </div>
           </div>
-        </div>
+        </div> */}
         
         {/* Bottom Right Video Indicator */}
         <div className="absolute bottom-8 right-8 z-20 hidden lg:block">
