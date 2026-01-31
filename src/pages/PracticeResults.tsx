@@ -168,10 +168,27 @@ export default function PracticeResults() {
               </Badge>
             </div>
 
-            <Progress 
-              value={displayedScore} 
-              className="h-4 mb-6" 
-            />
+            {/* Segmented Progress Bar - shows correct/incorrect/incomplete proportions */}
+            <div className="h-4 mb-6 rounded-full overflow-hidden flex bg-muted">
+              {result.score > 0 && (
+                <div 
+                  className="bg-success h-full transition-all duration-1000" 
+                  style={{ width: `${(result.score / test.question_count) * 100}%` }}
+                />
+              )}
+              {incorrectCount > 0 && (
+                <div 
+                  className="bg-destructive h-full transition-all duration-1000" 
+                  style={{ width: `${(incorrectCount / test.question_count) * 100}%` }}
+                />
+              )}
+              {incompleteCount > 0 && (
+                <div 
+                  className="bg-muted-foreground/30 h-full transition-all duration-1000" 
+                  style={{ width: `${(incompleteCount / test.question_count) * 100}%` }}
+                />
+              )}
+            </div>
 
             {/* Stats Grid - 3 columns */}
             <div className="grid grid-cols-3 gap-4 text-center mb-4">

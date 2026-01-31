@@ -416,34 +416,6 @@ export default function PracticeSession() {
               <div /> 
             )}
 
-            {/* Question Navigator */}
-            <div className="hidden md:flex items-center gap-1 flex-wrap justify-center max-w-md">
-              {questions.map((_, idx) => {
-                const answer = answers.find((a) => a.questionId === questions[idx].id);
-                const isAnswered = !!answer?.answer;
-                const isFlagged = answer?.flagged;
-                const isCurrent = idx === currentIndex;
-
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentIndex(idx)}
-                    className={`w-8 h-8 rounded text-xs font-medium transition-all ${
-                      isCurrent
-                        ? 'bg-primary text-primary-foreground'
-                        : isFlagged
-                        ? 'bg-warning text-warning-foreground'
-                        : isAnswered
-                        ? 'bg-success/20 text-success border border-success/30'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                    }`}
-                  >
-                    {idx + 1}
-                  </button>
-                );
-              })}
-            </div>
-
             <Button
               variant={currentIndex === questions.length - 1 ? 'default' : 'outline'}
               onClick={() => {
