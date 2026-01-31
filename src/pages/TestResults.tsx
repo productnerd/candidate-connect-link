@@ -11,6 +11,23 @@ import type { Tables } from '@/integrations/supabase/types';
 type TestResult = Tables<'test_results'>;
 type TestLibrary = Tables<'test_library'>;
 
+// Calculate percentile dynamically
+const calculatePercentile = async (testId: string, userScore: number): Promise<number> => {
+  const { count: totalResults } = await supabase
+    .from('test_results')
+    .select('*', { count: 'exact', head: true })
+    .eq('test_id', testId);
+    
+  const { count: belowScore } = await supabase
+    .from('test_results')
+    .select('*', { count: 'exact', head: true })
+    .eq('test_id', testId)
+    .lt('score', userScore);
+    
+  if (!totalResults || totalResults === 0) return 50; // Default to 50th percentile
+  return Math.round(((belowScore || 0) / totalResults) * 100);
+};
+
 interface QuestionBreakdown {
   questionId: string;
   userAnswer: string | null;
@@ -26,6 +43,8 @@ export default function TestResults() {
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<TestResult | null>(null);
   const [test, setTest] = useState<TestLibrary | null>(null);
+  const [percentile, setPercentile] = useState<number | null>(null);
+  const [calculatedPercentage, setCalculatedPercentage] = useState<number>(0);
 
   useEffect(() => {
     loadResults();
@@ -58,6 +77,16 @@ export default function TestResults() {
 
       if (testError) throw testError;
       setTest(testData);
+
+      // Calculate percentage from raw score
+      const breakdown = resultData.question_breakdown as unknown as QuestionBreakdown[] || [];
+      const totalQuestions = breakdown.length || testData.question_count || 1;
+      const percentage = Math.round((resultData.score / totalQuestions) * 100);
+      setCalculatedPercentage(percentage);
+
+      // Calculate percentile dynamically
+      const pct = await calculatePercentile(resultData.test_id, resultData.score);
+      setPercentile(pct);
 
     } catch (err) {
       console.error('Error loading results:', err);
@@ -120,7 +149,7 @@ export default function TestResults() {
   const breakdown = result.question_breakdown as unknown as QuestionBreakdown[] || [];
   const correctCount = breakdown.filter(q => q.isCorrect).length;
   const totalQuestions = breakdown.length || test?.question_count || 0;
-  const scoreBadge = getScoreBadge(Number(result.percentage));
+  const scoreBadge = getScoreBadge(calculatedPercentage);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -143,11 +172,12 @@ export default function TestResults() {
               <Badge variant="secondary" className="mb-4 bg-white/20 text-white border-white/30">
                 {scoreBadge.label}
               </Badge>
-              <p className={`text-7xl font-bold mb-2`}>
-                {Math.round(Number(result.percentage))}%
+              <p className="text-7xl font-bold mb-2">
+                {result.score}/{totalQuestions}
               </p>
               <p className="text-primary-foreground/80">
-                You scored {result.score} points
+                Raw Score • {calculatedPercentage}% accuracy
+                {percentile !== null && ` • ${percentile}th percentile`}
               </p>
             </div>
             <CardContent className="p-6">
@@ -182,9 +212,9 @@ export default function TestResults() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Accuracy</span>
-                  <span className="font-medium">{Math.round(Number(result.percentage))}%</span>
+                  <span className="font-medium">{calculatedPercentage}%</span>
                 </div>
-                <Progress value={Number(result.percentage)} />
+                <Progress value={calculatedPercentage} />
               </div>
 
               <div className="space-y-2">
