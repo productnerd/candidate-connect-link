@@ -99,7 +99,12 @@ export function AuthForm({ role }: AuthFormProps) {
       return;
     }
 
-    navigate('/dashboard');
+    // Redirect based on role
+    if (role === 'employer') {
+      navigate('/dashboard/employer');
+    } else {
+      navigate('/dashboard/candidate');
+    }
   };
 
   const handleSignup = async (data: SignupFormData) => {
