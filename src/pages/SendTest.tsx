@@ -243,16 +243,7 @@ export default function SendTest() {
           </Card>
         ) : (
           <Card className="card-elevated">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Send className="h-5 w-5 text-primary" />
-                Test Details
-              </CardTitle>
-              <CardDescription>
-                Fill in your info and the candidate's details
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
                 {/* Your Information Section */}
                 <div className="space-y-4">
