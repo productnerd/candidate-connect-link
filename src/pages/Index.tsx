@@ -61,15 +61,21 @@ export default function Index() {
     <div className="min-h-screen flex flex-col bg-background text-foreground overflow-hidden">
       <Navbar />
       
-      {/* Hero Section - Full Screen with Background Image */}
+      {/* Hero Section - Full Screen with Video Background */}
       <section className="relative min-h-screen flex flex-col pt-16">
-        {/* Background image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${employerHeroBg})` }}
-        />
+        {/* Background video */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+          poster={employerHeroBg}
+        >
+          <source src="/videos/hero-bg.mp4" type="video/mp4" />
+        </video>
         {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-foreground/40" />
+        <div className="absolute inset-0 bg-foreground/50" />
         
         {/* Main Hero Content */}
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center pt-20 pb-32 px-4">
