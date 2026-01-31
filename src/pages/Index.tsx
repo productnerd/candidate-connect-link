@@ -156,6 +156,14 @@ export default function Index() {
                 <Package className="h-4 w-4" />
                 Purchase a Bundle
               </Button>
+              <a 
+                href="/candidate/start" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-xs text-background/60 hover:text-background/90 transition-colors uppercase tracking-wider mt-2"
+              >
+                or try the test
+              </a>
             </div>
           </div>
         </div>
