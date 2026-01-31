@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
@@ -147,6 +147,18 @@ export default function SendTest() {
   useEffect(() => {
     fetchTests();
   }, []);
+
+  // Auto-set CCAT test when tests load
+  useEffect(() => {
+    if (tests.length > 0 && !form.watch('testId')) {
+      const ccatTest = tests.find(t => t.name.toLowerCase().includes('ccat'));
+      if (ccatTest) {
+        form.setValue('testId', ccatTest.id);
+      } else {
+        form.setValue('testId', tests[0].id);
+      }
+    }
+  }, [tests, form]);
 
   const fetchTests = async () => {
     try {
@@ -456,50 +468,17 @@ export default function SendTest() {
 
                   {/* Test Selection */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-muted-foreground tracking-wide">Select Assessment</h3>
+                    <h3 className="font-semibold text-muted-foreground tracking-wide">Assessment</h3>
                     
-                    <div className="space-y-2">
-                      {loading ? (
-                        <div className="flex items-center gap-2 p-3 border rounded-lg">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span className="text-muted-foreground">Loading tests...</span>
-                        </div>
-                      ) : (
-                        <Select
-                          value={form.watch('testId')}
-                          onValueChange={(value) => form.setValue('testId', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choose an assessment" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {tests.map((test) => (
-                              <SelectItem key={test.id} value={test.id}>
-                                <div className="flex items-center gap-2">
-                                  <Brain className="h-4 w-4 text-primary" />
-                                  <span>{test.name}</span>
-                                  <span className="text-muted-foreground">({test.duration_minutes} min)</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                      {form.formState.errors.testId && (
-                        <p className="text-sm text-destructive">{form.formState.errors.testId.message}</p>
-                      )}
-                    </div>
-
-                    {/* Selected Test Details */}
-                    {selectedTest && (
-                      <div className="p-4 rounded-lg bg-muted/50 border animate-fade-in">
-                        <h4 className="font-medium mb-1">{selectedTest.name}</h4>
-                        <p className="text-sm text-muted-foreground mb-2">{selectedTest.description}</p>
-                        <div className="flex gap-4 text-sm">
-                          <span className="text-primary">Duration: {selectedTest.duration_minutes} min</span>
-                          <span className="capitalize">Category: {selectedTest.category}</span>
-                        </div>
+                    <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 border">
+                      <Brain className="h-5 w-5 text-primary" />
+                      <div>
+                        <p className="font-medium">CCAT</p>
+                        <p className="text-sm text-muted-foreground">Cognitive aptitude assessment • 15 min</p>
                       </div>
+                    </div>
+                    {form.formState.errors.testId && (
+                      <p className="text-sm text-destructive">{form.formState.errors.testId.message}</p>
                     )}
                   </div>
 
