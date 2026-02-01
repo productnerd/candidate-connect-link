@@ -25,6 +25,7 @@ import {
 import type { Tables } from '@/integrations/supabase/types';
 import { loadPracticeSession, type PracticeSessionState } from '@/lib/practiceSessionStorage';
 import { useAuth } from '@/hooks/useAuth';
+import { ResultsRandomBackground } from '@/components/media/ResultsRandomBackground';
 
 type TestLibrary = Tables<'test_library'>;
 
@@ -178,8 +179,18 @@ export default function PracticeResults() {
   const completionRate = Math.round((answeredCount / test.question_count) * 100);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 py-8 px-4">
-      <div className="max-w-xl mx-auto">
+    <div className="relative min-h-screen bg-background py-8 px-4 overflow-hidden">
+      <ResultsRandomBackground
+        fallbackItems={[
+          { kind: 'video', src: '/media/results/mymindloadin.mp4' },
+          { kind: 'image', src: '/media/results/mountain.jpg' },
+          { kind: 'image', src: '/media/results/house.jpeg' },
+          { kind: 'image', src: '/media/results/productnerd-flower-garden.png' },
+          { kind: 'image', src: '/media/results/asset.avif' },
+        ]}
+      />
+
+      <div className="relative z-10 max-w-xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
