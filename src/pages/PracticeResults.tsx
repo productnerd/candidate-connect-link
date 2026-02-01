@@ -6,11 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import confetti from 'canvas-confetti';
+import { toast } from 'sonner';
 import { 
   Loader2, 
   Trophy, 
   Clock, 
-  Target,
   Home,
   RotateCcw,
   CheckCircle,
@@ -37,6 +37,7 @@ export default function PracticeResults() {
   const [session, setSession] = useState<PracticeSessionState | null>(null);
   const [test, setTest] = useState<TestLibrary | null>(null);
   const [showBundleModal, setShowBundleModal] = useState(false);
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [displayedScore, setDisplayedScore] = useState(0);
   const animationStarted = useRef(false);
   const confettiTriggered = useRef(false);
@@ -130,10 +131,24 @@ export default function PracticeResults() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const getScoreColor = (percentage: number) => {
-    if (percentage >= 80) return 'text-success';
-    if (percentage >= 60) return 'text-warning';
-    return 'text-destructive';
+  const handleCandidateCheckout = async () => {
+    setIsCheckoutLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { bundle_type: 'candidate_unlimited' },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        setShowBundleModal(false);
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('Failed to start checkout. Please try again.');
+    } finally {
+      setIsCheckoutLoading(false);
+    }
   };
 
   const getScoreLabel = (percentage: number) => {
@@ -178,12 +193,9 @@ export default function PracticeResults() {
         <Card className="mb-6">
           <CardContent className="pt-6">
             <div className="text-center mb-6">
-              <div className={`text-[10rem] leading-none font-display font-bold mb-2 ${getScoreColor(result.percentage)}`}>
+              <div className="text-[10rem] leading-none font-display font-bold mb-2 text-primary">
                 {result.score}
               </div>
-              <p className="text-muted-foreground mb-2">
-                {displayedScore}% accuracy
-              </p>
               <Badge variant="secondary" className="text-lg px-4 py-1">
                 {getScoreLabel(result.percentage)}
               </Badge>
@@ -249,18 +261,14 @@ export default function PracticeResults() {
 
         {/* Stats */}
         <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <Target className="h-5 w-5" />
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-xl">
               Performance Summary
             </CardTitle>
+            <span className="text-2xl font-display font-bold text-primary">{displayedScore}%</span>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Questions Attempted</span>
-                <span className="font-medium">{answeredCount} / {test.question_count}</span>
-              </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Completion Rate</span>
                 <span className="font-medium">{completionRate}%</span>
@@ -294,33 +302,42 @@ export default function PracticeResults() {
                 </Button>
               ) : (
                 <Button 
-                  variant="outline" 
+                  variant="secondary"
                   className="w-full"
                   onClick={() => setShowBundleModal(true)}
                 >
-                  <Sparkles className="h-3 w-3 mr-2" />
-                  Buy Unlimited Tests
+                  Unlimited Premium Tests €14
+                  <Sparkles className="h-4 w-4" />
                 </Button>
               )}
             </>
           ) : (
             // secondfreetest or any other - no more free tests available
-            user ? (
-              <Button className="w-full" asChild>
-                <Link to="/dashboard">
-                  <Home className="h-3 w-3 mr-2" />
-                  Dashboard
-                </Link>
-              </Button>
-            ) : (
-              <Button 
-                className="w-full"
-                onClick={() => setShowBundleModal(true)}
-              >
-                <Sparkles className="h-3 w-3 mr-2" />
-                Buy Unlimited Tests
-              </Button>
-            )
+            <>
+              {user ? (
+                <Button className="w-full" asChild>
+                  <Link to="/dashboard">
+                    <Home className="h-3 w-3 mr-2" />
+                    Dashboard
+                  </Link>
+                </Button>
+              ) : (
+                <>
+                  <Button 
+                    className="w-full"
+                    onClick={() => setShowBundleModal(true)}
+                  >
+                    Unlimited Premium Tests €14
+                    <Sparkles className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link to="/auth/candidate">
+                      Sign In
+                    </Link>
+                  </Button>
+                </>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -408,9 +425,18 @@ export default function PracticeResults() {
 
               {/* CTA */}
               <div className="px-6 pb-6">
-                <Button className="w-full h-12 text-base shadow-lg shadow-primary/20" size="lg">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Get Unlimited Access
+                <Button 
+                  className="w-full h-12 text-base shadow-lg shadow-primary/20" 
+                  size="lg"
+                  onClick={handleCandidateCheckout}
+                  disabled={isCheckoutLoading}
+                >
+                  {isCheckoutLoading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 mr-2" />
+                  )}
+                  {isCheckoutLoading ? 'Loading...' : 'Get Unlimited Access'}
                 </Button>
                 <p className="text-center text-xs text-muted-foreground mt-3">
                   Secure checkout • Instant access
