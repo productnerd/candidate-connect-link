@@ -312,7 +312,7 @@ export default function PracticeSession() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border-b px-4 py-3">
+      <header className="sticky top-0 z-50 relative bg-card border-b px-4 pt-6 pb-4">
         <div className="max-w-4xl mx-auto">
           {/* Top row: Exit, Practice Mode + Timer (centered), Submit */}
           <div className="flex items-center justify-between">
@@ -326,7 +326,7 @@ export default function PracticeSession() {
             </Button>
 
             {/* Centered: Practice Mode + Timer stacked */}
-            <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center mt-1">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
               <Badge variant="outline" className="font-mono uppercase text-[10px] tracking-wider mb-3">
                 Practice Mode
               </Badge>
