@@ -306,8 +306,8 @@ export default function PracticeSession() {
 
   const currentQuestion = questions[currentIndex];
   const options = currentQuestion?.options as string[] | null;
-  const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
   const answeredCount = answers.filter((a) => a.answer).length;
+  const progress = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
