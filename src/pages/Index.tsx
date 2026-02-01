@@ -154,7 +154,7 @@ export default function Index() {
                 onClick={() => setShowBundleModal(true)}
               >
                 <Package className="h-4 w-4" />
-                Purchase a Bundle
+                Purchase Bundle
               </Button>
               <a 
                 href="/candidate/start" 
@@ -162,7 +162,7 @@ export default function Index() {
                 rel="noopener noreferrer"
                 className="text-xs text-background/60 hover:text-background/90 transition-colors uppercase tracking-wider mt-2"
               >
-                or try the test
+                or try a test
               </a>
             </div>
           </div>
@@ -334,7 +334,7 @@ export default function Index() {
               onClick={() => setShowBundleModal(true)}
             >
               <Package className="h-4 w-4" />
-              Purchase a Bundle
+              Purchase Bundle
             </Button>
           </div>
         </div>

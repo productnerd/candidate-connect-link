@@ -101,7 +101,7 @@ export function AuthForm({ role }: AuthFormProps) {
           </div>
           <h2 className="text-2xl font-bold mb-2">Check your email</h2>
           <p className="text-muted-foreground mb-6">
-            We've sent a magic link to <strong className="text-foreground">{sentEmail}</strong>
+            We've sent a magic link to <span className="italic">{sentEmail}</span>
           </p>
           <Button 
             variant="hero" 
