@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import confetti from 'canvas-confetti';
 import { 
   Loader2, 
   Trophy, 
@@ -20,8 +20,7 @@ import {
   Zap,
   Shield,
   BarChart3,
-  Infinity,
-  X
+  Infinity
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 import { loadPracticeSession, type PracticeSessionState } from '@/lib/practiceSessionStorage';
@@ -40,6 +39,7 @@ export default function PracticeResults() {
   const [showBundleModal, setShowBundleModal] = useState(false);
   const [displayedScore, setDisplayedScore] = useState(0);
   const animationStarted = useRef(false);
+  const confettiTriggered = useRef(false);
 
   useEffect(() => {
     loadResults();
@@ -67,6 +67,27 @@ export default function PracticeResults() {
       };
       
       requestAnimationFrame(animate);
+    }
+  }, [session]);
+
+  // Confetti for scores above 90%
+  useEffect(() => {
+    if (session?.result && session.result.percentage > 90 && !confettiTriggered.current) {
+      confettiTriggered.current = true;
+      
+      const fireConfetti = () => {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#F97316', '#FB923C', '#FDBA74', '#FED7AA', '#FFF7ED']
+        });
+      };
+
+      // Fire 3 confetti bursts, 1 second apart
+      fireConfetti();
+      setTimeout(fireConfetti, 1000);
+      setTimeout(fireConfetti, 2000);
     }
   }, [session]);
 
