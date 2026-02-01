@@ -310,9 +310,9 @@ export default function PracticeSession() {
   const progress = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col pt-4">
       {/* Header */}
-      <header className="sticky top-0 z-50 relative bg-card border-b px-4 pt-6 pb-4">
+      <header className="sticky top-4 z-50 relative bg-card border-b px-4 pt-6 pb-4">
         <div className="max-w-4xl mx-auto">
           {/* Top row: Exit, Practice Mode + Timer (centered), Submit */}
           <div className="flex items-center justify-between">
