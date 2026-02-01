@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle } from 'lucide-react';
+import { Check, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Option can be either a string (text) or an object with id and text/image_url
@@ -110,12 +110,12 @@ export function QuestionOptions({
               <div className="absolute top-2 right-2 z-10">
                 {showCorrect ? (
                   isCorrect ? (
-                    <CheckCircle className="h-5 w-5 text-success" />
+                    <Check className="h-6 w-6 text-success stroke-[3]" />
                   ) : isWrong ? (
                     <XCircle className="h-5 w-5 text-destructive" />
                   ) : null
                 ) : (
-                  <CheckCircle className="h-5 w-5 text-primary" />
+                  <Check className="h-6 w-6 text-primary stroke-[3]" />
                 )}
               </div>
             )}
@@ -168,7 +168,7 @@ export function QuestionOptions({
           >
             <div className="flex items-center gap-3">
               <div className={cn(
-                'w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0',
+                'w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0',
                 showCorrect && isCorrect
                   ? 'border-success bg-success text-success-foreground'
                   : showCorrect && isWrong
@@ -179,15 +179,15 @@ export function QuestionOptions({
               )}>
                 {showCorrect ? (
                   isCorrect ? (
-                    <CheckCircle className="h-4 w-4" />
+                    <Check className="h-5 w-5 stroke-[3]" />
                   ) : isWrong ? (
                     <XCircle className="h-4 w-4" />
                   ) : null
                 ) : (
-                  isSelected && <CheckCircle className="h-4 w-4" />
+                  isSelected && <Check className="h-5 w-5 stroke-[3]" />
                 )}
               </div>
-              <span className="flex-1">{display.content}</span>
+              <span className={cn('flex-1', isSelected && 'font-semibold')}>{display.content}</span>
             </div>
           </button>
         );
