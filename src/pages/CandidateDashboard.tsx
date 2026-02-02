@@ -46,6 +46,7 @@ interface TestHistoryEntry {
   total_questions: number;
   time_taken_seconds: number | null;
   completed_at: string;
+  category_scores: unknown;
 }
 
 export default function CandidateDashboard() {
@@ -119,7 +120,7 @@ export default function CandidateDashboard() {
 
   const pendingTests = invitations.filter(i => i.status === 'pending' && new Date(i.expires_at) > new Date());
 
-  // Prepare chart data
+  // Prepare chart data - always show empty chart if no data
   const chartData = testHistory
     .slice()
     .reverse()
@@ -130,11 +131,37 @@ export default function CandidateDashboard() {
       type: entry.test_type,
     }));
 
-  // Calculate category averages (mock data for now since we don't have detailed category tracking yet)
+  // Calculate category averages from test history
   const totalTests = testHistory.length;
   const avgScore = totalTests > 0 
     ? Math.round(testHistory.reduce((sum, t) => sum + (t.score / t.total_questions) * 100, 0) / totalTests)
     : 0;
+
+  // Calculate category accuracy
+  const categoryStats = {
+    math_logic: { correct: 0, total: 0 },
+    verbal_reasoning: { correct: 0, total: 0 },
+    spatial_reasoning: { correct: 0, total: 0 },
+  };
+
+  testHistory.forEach(entry => {
+    const scores = entry.category_scores;
+    if (scores && typeof scores === 'object' && !Array.isArray(scores)) {
+      Object.entries(scores as Record<string, unknown>).forEach(([category, data]) => {
+        if (categoryStats[category as keyof typeof categoryStats] && data && typeof data === 'object') {
+          const typedData = data as { correct?: number; total?: number };
+          categoryStats[category as keyof typeof categoryStats].correct += typedData.correct || 0;
+          categoryStats[category as keyof typeof categoryStats].total += typedData.total || 0;
+        }
+      });
+    }
+  });
+
+  const getCategoryAccuracy = (category: keyof typeof categoryStats) => {
+    const stats = categoryStats[category];
+    if (stats.total === 0) return '--';
+    return `${Math.round((stats.correct / stats.total) * 100)}%`;
+  };
 
   if (loading) {
     return (
@@ -152,35 +179,37 @@ export default function CandidateDashboard() {
       <Navbar />
       
       <main className="container pt-24 pb-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Welcome back, {profile?.full_name || 'Candidate'}!</h1>
-          <p className="text-muted-foreground">Your practice hub for unlimited test preparation</p>
+        {/* Header with Pending Assessments */}
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Welcome back, {profile?.full_name || 'Candidate'}!</h1>
+            <p className="text-muted-foreground">Your practice hub for unlimited test preparation</p>
+          </div>
+          
+          {/* Pending Assessments - Right aligned */}
+          {pendingTests.length > 0 && (
+            <Card className="card-elevated border-warning/50 min-w-[280px]">
+              <CardHeader className="py-3 px-4">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <Clock className="h-4 w-4 text-warning" />
+                  {pendingTests.length} Pending Assessment{pendingTests.length > 1 ? 's' : ''}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0 px-4 pb-3">
+                <div className="flex flex-wrap gap-2">
+                  {pendingTests.map((invitation) => (
+                    <Button key={invitation.id} variant="outline" size="sm" asChild>
+                      <Link to={`/test/${invitation.invitation_token}`}>
+                        <Play className="h-3 w-3 mr-1" />
+                        {invitation.test_library?.name || 'Assessment'}
+                      </Link>
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
-
-        {/* Pending Tests - Compact */}
-        {pendingTests.length > 0 && (
-          <Card className="card-elevated mb-6 border-warning/50">
-            <CardHeader className="py-4">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Clock className="h-4 w-4 text-warning" />
-                {pendingTests.length} Pending Assessment{pendingTests.length > 1 ? 's' : ''}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="flex flex-wrap gap-2">
-                {pendingTests.map((invitation) => (
-                  <Button key={invitation.id} variant="outline" size="sm" asChild>
-                    <Link to={`/test/${invitation.invitation_token}`}>
-                      <Play className="h-3 w-3 mr-1" />
-                      {invitation.test_library?.name || 'Assessment'}
-                    </Link>
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Progress Section */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
@@ -194,56 +223,51 @@ export default function CandidateDashboard() {
               <CardDescription>Score trends across your practice sessions</CardDescription>
             </CardHeader>
             <CardContent>
-              {chartData.length > 0 ? (
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData}>
-                      <XAxis 
-                        dataKey="date" 
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                      />
-                      <YAxis 
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                        domain={[0, 100]}
-                        tickFormatter={(value) => `${value}%`}
-                      />
-                      <Tooltip 
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                        }}
-                        labelStyle={{ color: 'hsl(var(--foreground))' }}
-                        formatter={(value: number) => [`${value}%`, 'Score']}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="score" 
-                        stroke="hsl(var(--primary))"
-                        strokeWidth={2}
-                        dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2 }}
-                        activeDot={{ r: 6, fill: 'hsl(var(--primary))' }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
-                  <div className="text-center">
-                    <Trophy className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                    <p>Complete your first practice test to see your progress!</p>
-                  </div>
-                </div>
-              )}
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={12}
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={12}
+                      domain={[0, 100]}
+                      tickFormatter={(value) => `${value}%`}
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                      }}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
+                      formatter={(value: number) => [`${value}%`, 'Score']}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="score" 
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2 }}
+                      activeDot={{ r: 6, fill: 'hsl(var(--primary))' }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
 
-          {/* Stats Summary */}
+          {/* Progress Stats (renamed from Quick Stats, styled like Your Progress) */}
           <Card className="card-elevated">
             <CardHeader>
-              <CardTitle className="text-base">Quick Stats</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-primary" />
+                Progress
+              </CardTitle>
+              <CardDescription>Your overall performance</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
@@ -260,18 +284,29 @@ export default function CandidateDashboard() {
                 </div>
                 <span className="font-bold text-lg">{avgScore}%</span>
               </div>
-              <div className="pt-2 border-t">
-                <p className="text-xs text-muted-foreground mb-2">Category Focus</p>
-                <div className="flex gap-1">
-                  <Badge variant="outline" className="text-xs">
-                    <Brain className="h-3 w-3 mr-1" />Math
-                  </Badge>
-                  <Badge variant="outline" className="text-xs">
-                    <MessageSquare className="h-3 w-3 mr-1" />Verbal
-                  </Badge>
-                  <Badge variant="outline" className="text-xs">
-                    <Shapes className="h-3 w-3 mr-1" />Spatial
-                  </Badge>
+              
+              {/* Category Accuracy Section */}
+              <div className="pt-3 border-t">
+                <p className="text-xs text-muted-foreground mb-3">Category Accuracy</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="p-3 rounded-lg bg-muted/50 text-center">
+                    <Badge variant="outline" className="text-xs mb-2">
+                      <Brain className="h-3 w-3 mr-1" />Math
+                    </Badge>
+                    <p className="font-bold text-lg">{getCategoryAccuracy('math_logic')}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-muted/50 text-center">
+                    <Badge variant="outline" className="text-xs mb-2">
+                      <MessageSquare className="h-3 w-3 mr-1" />Verbal
+                    </Badge>
+                    <p className="font-bold text-lg">{getCategoryAccuracy('verbal_reasoning')}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-muted/50 text-center">
+                    <Badge variant="outline" className="text-xs mb-2">
+                      <Shapes className="h-3 w-3 mr-1" />Spatial
+                    </Badge>
+                    <p className="font-bold text-lg">{getCategoryAccuracy('spatial_reasoning')}</p>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -279,7 +314,10 @@ export default function CandidateDashboard() {
         </div>
 
         {/* Practice Actions */}
-        <h2 className="text-xl font-semibold mb-4">Start Practicing</h2>
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <TrendingUp className="h-5 w-5 text-primary" />
+          Practice
+        </h2>
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Mock Test Card */}
           <Card className="card-elevated hover:shadow-lg transition-shadow">
@@ -296,42 +334,42 @@ export default function CandidateDashboard() {
             </CardHeader>
             <CardContent>
               <ul className="text-sm text-muted-foreground space-y-1 mb-4">
-                <li>• 5 random premium questions</li>
-                <li>• 5 minutes time limit</li>
-                <li>• Simulates real test conditions</li>
+                <li>• 50 questions</li>
+                <li>• 15 minute countdown</li>
+                <li>• Answers revealed at the end</li>
               </ul>
               <Button className="w-full" asChild>
                 <Link to="/candidate/mock">
                   <Zap className="h-4 w-4 mr-2" />
-                  Start Mock Test
+                  Start
                 </Link>
               </Button>
             </CardContent>
           </Card>
 
-          {/* Learning Mode Card */}
+          {/* Learning Mode Test Card */}
           <Card className="card-elevated hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-success/10">
-                  <BookOpen className="h-6 w-6 text-success" />
+                <div className="p-3 rounded-lg bg-primary/10">
+                  <BookOpen className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <CardTitle>Learning Mode</CardTitle>
+                  <CardTitle>Learning Mode Test</CardTitle>
                   <CardDescription>Practice at your own pace</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <ul className="text-sm text-muted-foreground space-y-1 mb-4">
+                <li>• 50 questions</li>
                 <li>• No time pressure</li>
                 <li>• Instant feedback after each answer</li>
-                <li>• Detailed explanations provided</li>
               </ul>
-              <Button className="w-full" variant="outline" asChild>
+              <Button className="w-full" asChild>
                 <Link to="/candidate/learn">
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Start Learning
+                  <Zap className="h-4 w-4 mr-2" />
+                  Start
                 </Link>
               </Button>
             </CardContent>
@@ -356,16 +394,18 @@ export default function CandidateDashboard() {
                       <div className={`p-2 rounded-full ${
                         entry.test_type === 'mock' 
                           ? 'bg-primary/10' 
-                          : 'bg-success/10'
+                          : 'bg-primary/10'
                       }`}>
                         {entry.test_type === 'mock' ? (
                           <Zap className="h-4 w-4 text-primary" />
                         ) : (
-                          <BookOpen className="h-4 w-4 text-success" />
+                          <BookOpen className="h-4 w-4 text-primary" />
                         )}
                       </div>
                       <div>
-                        <p className="font-medium capitalize">{entry.test_type} Test</p>
+                        <p className="font-medium capitalize">
+                          {entry.test_type === 'mock' ? 'Mock Test' : 'Learning Mode Test'}
+                        </p>
                         <p className="text-xs text-muted-foreground">
                           {new Date(entry.completed_at).toLocaleDateString()}
                         </p>

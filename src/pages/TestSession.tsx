@@ -331,10 +331,8 @@ export default function TestSession() {
               <span className="font-mono font-bold text-lg">{formatTime(timeRemaining)}</span>
             </div>
 
-            {/* Submit */}
-            <Button onClick={() => setShowSubmitDialog(true)} variant="default">
-              Submit Test
-            </Button>
+            {/* Spacer for balance */}
+            <div className="w-24" />
           </div>
         </div>
       </header>
