@@ -172,7 +172,7 @@ export default function LearningSession() {
           <div className="flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-primary" />
             <Badge variant="outline" className="font-mono uppercase text-[10px] tracking-wider">
-              Learning Mode
+              Learning Mode Test
             </Badge>
           </div>
 

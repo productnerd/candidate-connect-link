@@ -338,14 +338,7 @@ export default function MockSession() {
               </div>
             </div>
 
-            <Button 
-              variant="destructive" 
-              size="sm"
-              onClick={handleSubmit}
-              disabled={submitting}
-            >
-              {submitting ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Submit'}
-            </Button>
+            <div className="w-16" /> {/* Spacer for balance */}
           </div>
         </div>
       </header>
