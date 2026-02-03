@@ -21,7 +21,7 @@ import {
   MessageSquare,
   Shapes
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TestInvitation {
@@ -156,6 +156,14 @@ export default function CandidateDashboard() {
     ? Math.round(testHistory.reduce((sum, t) => sum + (t.score / t.total_questions) * 100, 0) / totalTests)
     : 0;
 
+  // Calculate improvement from first test
+  const firstTestScore = testHistory.length > 0 
+    ? Math.round((testHistory[testHistory.length - 1].score / testHistory[testHistory.length - 1].total_questions) * 100)
+    : null;
+  const scoreImprovement = firstTestScore !== null && totalTests > 1
+    ? avgScore - firstTestScore
+    : null;
+
   // Calculate category accuracy
   const categoryStats = {
     math_logic: { correct: 0, total: 0 },
@@ -245,6 +253,13 @@ export default function CandidateDashboard() {
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
+                    <CartesianGrid 
+                      strokeDasharray="3 3" 
+                      stroke="hsl(var(--border))" 
+                      strokeOpacity={0.3}
+                      horizontal={true}
+                      vertical={true}
+                    />
                     <XAxis 
                       dataKey="date" 
                       stroke="hsl(var(--muted-foreground))"
@@ -302,7 +317,14 @@ export default function CandidateDashboard() {
                   <Trophy className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">Average Score</span>
                 </div>
-                <span className="font-bold text-lg">{avgScore}%</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-lg">{avgScore}%</span>
+                  {scoreImprovement !== null && (
+                    <span className={`text-xs font-medium ${scoreImprovement >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                      {scoreImprovement >= 0 ? '+' : ''}{scoreImprovement}%
+                    </span>
+                  )}
+                </div>
               </div>
               
               {/* Category Accuracy Section */}
@@ -334,10 +356,10 @@ export default function CandidateDashboard() {
         </div>
 
         {/* Practice Actions */}
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 mb-4">
           <TrendingUp className="h-5 w-5 text-primary" />
           Practice
-        </h2>
+        </CardTitle>
         <TooltipProvider>
           <div className="grid md:grid-cols-[1fr_auto_1fr] gap-6 mb-8">
             {/* Mock Test Card */}
