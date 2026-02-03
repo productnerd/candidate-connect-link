@@ -12,10 +12,13 @@ import {
   Home
 } from 'lucide-react';
 import { loadPracticeSession, type PracticeSessionState } from '@/lib/practiceSessionStorage';
+import { savePendingScore } from '@/lib/pendingScoreStorage';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function MockResults() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [session, setSession] = useState<PracticeSessionState | null>(null);
 
   useEffect(() => {
@@ -31,7 +34,19 @@ export default function MockResults() {
     }
 
     setSession(local);
-  }, [sessionId, navigate]);
+
+    // Save score to localStorage for anonymous users
+    if (!user && local.result) {
+      savePendingScore({
+        score: local.result.score,
+        total_questions: 50, // Mock tests are always 50 questions
+        time_taken_seconds: local.result.timeTakenSeconds || 0,
+        category_scores: {},
+        test_type: 'mock',
+        completed_at: new Date().toISOString(),
+      });
+    }
+  }, [sessionId, navigate, user]);
 
   if (!session || !session.result) {
     return null;

@@ -15,6 +15,7 @@ import {
 import type { LearningSessionState } from './StartLearningTest';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { savePendingScore } from '@/lib/pendingScoreStorage';
 
 export default function LearningResults() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -43,17 +44,29 @@ export default function LearningResults() {
       const parsedSession: LearningSessionState = JSON.parse(stored);
       setSession(parsedSession);
 
+      const correctCount = parsedSession.answers.filter(a => a.correct).length;
+      const totalQuestions = parsedSession.questionIds.length;
+
       // Save to candidate_test_history if user is logged in
       if (user) {
-        const correctCount = parsedSession.answers.filter(a => a.correct).length;
         await supabase.from('candidate_test_history').insert({
           user_id: user.id,
           session_id: sessionId,
           test_type: 'learning',
           score: correctCount,
-          total_questions: parsedSession.questionIds.length,
+          total_questions: totalQuestions,
           time_taken_seconds: null, // No time tracking for learning mode
           category_scores: {},
+          completed_at: new Date().toISOString(),
+        });
+      } else {
+        // Save to localStorage for anonymous users to migrate after signup
+        savePendingScore({
+          score: correctCount,
+          total_questions: totalQuestions,
+          time_taken_seconds: 0,
+          category_scores: {},
+          test_type: 'learning',
           completed_at: new Date().toISOString(),
         });
       }
