@@ -22,6 +22,7 @@ import {
   Shapes
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TestInvitation {
   id: string;
@@ -120,16 +121,34 @@ export default function CandidateDashboard() {
 
   const pendingTests = invitations.filter(i => i.status === 'pending' && new Date(i.expires_at) > new Date());
 
-  // Prepare chart data - always show empty chart if no data
-  const chartData = testHistory
-    .slice()
-    .reverse()
-    .slice(-10) // Last 10 tests
-    .map(entry => ({
-      date: new Date(entry.completed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      score: Math.round((entry.score / entry.total_questions) * 100),
-      type: entry.test_type,
-    }));
+  // Generate 10-day x-axis labels (last 10 days)
+  const getLast10Days = () => {
+    const days = [];
+    for (let i = 9; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      days.push({
+        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        fullDate: date.toISOString().split('T')[0],
+        score: null as number | null,
+      });
+    }
+    return days;
+  };
+
+  // Map test history to the 10-day chart
+  const chartData = (() => {
+    const days = getLast10Days();
+    testHistory.forEach(entry => {
+      const entryDate = new Date(entry.completed_at).toISOString().split('T')[0];
+      const dayIndex = days.findIndex(d => d.fullDate === entryDate);
+      if (dayIndex !== -1) {
+        // Use the latest score for that day (or average if needed)
+        days[dayIndex].score = Math.round((entry.score / entry.total_questions) * 100);
+      }
+    });
+    return days;
+  })();
 
   // Calculate category averages from test history
   const totalTests = testHistory.length;
@@ -218,7 +237,7 @@ export default function CandidateDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-primary" />
-                Your Progress
+                Score Over Time
               </CardTitle>
               <CardDescription>Score trends across your practice sessions</CardDescription>
             </CardHeader>
@@ -235,6 +254,7 @@ export default function CandidateDashboard() {
                       stroke="hsl(var(--muted-foreground))"
                       fontSize={12}
                       domain={[0, 100]}
+                      label={{ value: 'CCAT Score', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: 'hsl(var(--muted-foreground))', fontSize: 11 } }}
                       tickFormatter={(value) => `${value}%`}
                     />
                     <Tooltip 
@@ -318,63 +338,88 @@ export default function CandidateDashboard() {
           <TrendingUp className="h-5 w-5 text-primary" />
           Practice
         </h2>
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          {/* Mock Test Card */}
-          <Card className="card-elevated hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-primary/10">
-                  <Zap className="h-6 w-6 text-primary" />
+        <TooltipProvider>
+          <div className="grid md:grid-cols-[1fr_auto_1fr] gap-6 mb-8">
+            {/* Mock Test Card */}
+            <Card className="card-elevated hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-lg bg-primary/10">
+                    <Zap className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>Mock Test</CardTitle>
+                    <CardDescription>Timed practice with premium questions</CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle>Mock Test</CardTitle>
-                  <CardDescription>Timed practice with premium questions</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ul className="text-sm text-muted-foreground space-y-1 mb-4">
-                <li>• 50 questions</li>
-                <li>• 15 minute countdown</li>
-                <li>• Answers revealed at the end</li>
-              </ul>
-              <Button className="w-full" asChild>
-                <Link to="/candidate/mock">
-                  <Zap className="h-4 w-4 mr-2" />
-                  Start
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent>
+                <ul className="text-sm text-muted-foreground space-y-1 mb-4">
+                  <li>• 50 questions</li>
+                  <li>• 15 minute countdown</li>
+                  <li>• Answers revealed at the end</li>
+                </ul>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <Button className="w-full" asChild>
+                      <Link to="/candidate/mock">
+                        <Zap className="h-4 w-4 mr-2" />
+                        Start
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>We'll generate a random test from a bank of 100s of questions</p>
+                  </TooltipContent>
+                </UITooltip>
+              </CardContent>
+            </Card>
 
-          {/* Learning Mode Test Card */}
-          <Card className="card-elevated hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-primary/10">
-                  <BookOpen className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <CardTitle>Learning Mode Test</CardTitle>
-                  <CardDescription>Practice at your own pace</CardDescription>
-                </div>
+            {/* OR Divider */}
+            <div className="hidden md:flex items-center justify-center">
+              <div className="flex flex-col items-center gap-2">
+                <div className="h-full w-px bg-border" />
+                <span className="text-muted-foreground font-medium text-sm px-2 py-1 rounded-full bg-muted">OR</span>
+                <div className="h-full w-px bg-border" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <ul className="text-sm text-muted-foreground space-y-1 mb-4">
-                <li>• 50 questions</li>
-                <li>• No time pressure</li>
-                <li>• Instant feedback after each answer</li>
-              </ul>
-              <Button className="w-full" asChild>
-                <Link to="/candidate/learn">
-                  <Zap className="h-4 w-4 mr-2" />
-                  Start
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+
+            {/* Learning Mode Test Card */}
+            <Card className="card-elevated hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-lg bg-primary/10">
+                    <BookOpen className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>Learning Mode Test</CardTitle>
+                    <CardDescription>Practice at your own pace</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="text-sm text-muted-foreground space-y-1 mb-4">
+                  <li>• 50 questions</li>
+                  <li>• No time pressure</li>
+                  <li>• Instant feedback after each answer</li>
+                </ul>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <Button className="w-full" asChild>
+                      <Link to="/candidate/learn">
+                        <Zap className="h-4 w-4 mr-2" />
+                        Start
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>We'll generate a random test from a bank of 100s of questions</p>
+                  </TooltipContent>
+                </UITooltip>
+              </CardContent>
+            </Card>
+          </div>
+        </TooltipProvider>
 
         {/* Recent Tests */}
         {testHistory.length > 0 && (
