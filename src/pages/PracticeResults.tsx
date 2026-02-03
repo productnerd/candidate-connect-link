@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 import { loadPracticeSession, type PracticeSessionState } from '@/lib/practiceSessionStorage';
+import { savePendingScore } from '@/lib/pendingScoreStorage';
 import { useAuth } from '@/hooks/useAuth';
 import { ResultsRandomBackground } from '@/components/media/ResultsRandomBackground';
 
@@ -117,6 +118,19 @@ export default function PracticeResults() {
 
       if (testError) throw testError;
       setTest(testData);
+
+      // Save score to localStorage for anonymous users
+      // This will be migrated to their account after signup
+      if (!user && local.result) {
+        savePendingScore({
+          score: local.result.score,
+          total_questions: testData.question_count,
+          time_taken_seconds: local.result.timeTakenSeconds || 0,
+          category_scores: {},
+          test_type: 'practice',
+          completed_at: new Date().toISOString(),
+        });
+      }
 
     } catch (err) {
       console.error('Error loading results:', err);

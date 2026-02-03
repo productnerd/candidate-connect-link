@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { loadPendingScore, clearPendingScore } from '@/lib/pendingScoreStorage';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ export default function AuthCallback() {
               }
               if (event === 'SIGNED_IN' && newSession) {
                 subscription.unsubscribe();
-                await redirectBasedOnRole(newSession.user.id);
+                await migratePendingScoreAndRedirect(newSession.user.id);
               }
             }
           );
@@ -54,15 +55,45 @@ export default function AuthCallback() {
           return;
         }
 
-        // Session exists, redirect based on role
-        await redirectBasedOnRole(session.user.id);
+        // Session exists, migrate pending score and redirect
+        await migratePendingScoreAndRedirect(session.user.id);
       } catch (err) {
         console.error('Auth callback error:', err);
         setError('An unexpected error occurred. Please try signing in.');
       }
     };
 
-    const redirectBasedOnRole = async (userId: string) => {
+    const migratePendingScoreAndRedirect = async (userId: string) => {
+      // Check for pending practice score from anonymous session
+      const pendingScore = loadPendingScore();
+      
+      if (pendingScore) {
+        try {
+          // Insert the pending score into candidate_test_history
+          const { error: insertError } = await supabase
+            .from('candidate_test_history')
+            .insert({
+              user_id: userId,
+              score: pendingScore.score,
+              total_questions: pendingScore.total_questions,
+              time_taken_seconds: pendingScore.time_taken_seconds || null,
+              category_scores: pendingScore.category_scores || {},
+              test_type: pendingScore.test_type,
+              completed_at: pendingScore.completed_at,
+            });
+
+          if (insertError) {
+            console.error('Failed to migrate pending score:', insertError);
+          } else {
+            console.log('Successfully migrated pending practice score');
+            // Clear the pending score from localStorage
+            clearPendingScore();
+          }
+        } catch (err) {
+          console.error('Error migrating pending score:', err);
+        }
+      }
+
       // Fetch user profile to determine role
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
