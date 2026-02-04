@@ -94,7 +94,7 @@ export default function TestSession() {
       if (sessionError) throw sessionError;
       
       if (sessionData.status === 'completed') {
-        navigate(`/test/${token}/results/${sessionId}`);
+        navigate(`/invite/${token}/results/${sessionId}`);
         return;
       }
 
@@ -269,7 +269,7 @@ export default function TestSession() {
           .eq('id', invitation.id);
       }
 
-      navigate(`/test/${token}/results/${session.id}`);
+      navigate(`/invite/${token}/results/${session.id}`);
 
     } catch (err) {
       console.error('Error submitting test:', err);
