@@ -106,7 +106,7 @@ export default function TakeTest() {
       }
 
       // Navigate to test interface
-      navigate(`/test/${token}/session/${data.sessionId}`);
+      navigate(`/invite/${token}/session/${data.sessionId}`);
 
     } catch (err: any) {
       console.error('Error starting test:', err);
@@ -128,11 +128,11 @@ export default function TakeTest() {
     const hoursLeft = differenceInHours(expiresAt, now);
 
     if (daysLeft > 1) {
-      return `${daysLeft} days remaining`;
+      return `${daysLeft} DAYS REMAINING`;
     } else if (hoursLeft > 1) {
-      return `${hoursLeft} hours remaining`;
+      return `${hoursLeft} HOURS REMAINING`;
     } else {
-      return `Expires ${formatDistanceToNow(expiresAt, { addSuffix: true })}`;
+      return `EXPIRES ${formatDistanceToNow(expiresAt, { addSuffix: true }).toUpperCase()}`;
     }
   };
 
@@ -251,13 +251,13 @@ export default function TakeTest() {
             </div>
           </div>
 
-          {/* Standard Instructions */}
+          {/* CCAT Instructions */}
           <div className="space-y-3">
             <h3 className="font-semibold">Instructions</h3>
             <div className="text-sm text-muted-foreground space-y-2">
               <p>
-                This is a timed assessment designed to evaluate your skills. Please read each question carefully 
-                before answering. Your responses will be recorded and cannot be changed once submitted.
+                The CCAT (Criteria Cognitive Aptitude Test) is a timed assessment measuring your problem-solving 
+                abilities across math, verbal, and spatial reasoning. Read each question carefully and work quickly.
               </p>
             </div>
             <ul className="space-y-2 mt-4">
@@ -279,26 +279,34 @@ export default function TakeTest() {
               </li>
               <li className="flex items-start gap-2 text-sm text-muted-foreground">
                 <CheckCircle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                <span>All questions must be answered before submission</span>
+                <span><strong>Unanswered questions are marked incorrect</strong> — try to answer all questions, even if guessing</span>
+              </li>
+              <li className="flex items-start gap-2 text-sm text-muted-foreground">
+                <CheckCircle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <span>You can navigate back and change answers before submitting</span>
+              </li>
+              <li className="flex items-start gap-2 text-sm text-muted-foreground">
+                <CheckCircle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <span>You may submit without answering all questions, but once submitted answers cannot be changed</span>
               </li>
             </ul>
           </div>
 
           {/* Practice Test CTA */}
-          <div className="p-4 bg-accent/30 rounded-lg border border-accent/50">
+          <div className="p-4 bg-muted/60 rounded-lg border border-border">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="font-medium text-sm">Not ready yet?</p>
+                <p className="font-medium text-sm">We highly recommend doing a mock test first</p>
                 <p className="text-xs text-muted-foreground">
-                  Try a practice test first to familiarize yourself with the format
+                  Familiarize yourself with the format and question types before taking the real assessment
                 </p>
               </div>
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => window.open('/practice', '_blank')}
+                onClick={() => window.open('/candidate/start', '_blank')}
               >
-                Practice Test
+                Try Mock Test
                 <ExternalLink className="h-3 w-3 ml-1.5" />
               </Button>
             </div>

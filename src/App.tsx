@@ -78,9 +78,9 @@ const App = () => (
             <Route path="/candidate/learn/results/:sessionId" element={<ProtectedRoute><LearningResults /></ProtectedRoute>} />
             
             {/* Invited test-taking routes (anonymous) */}
-            <Route path="/test/:token" element={<TakeTest />} />
-            <Route path="/test/:token/session/:sessionId" element={<TestSession />} />
-            <Route path="/test/:token/results/:sessionId" element={<TestResults />} />
+            <Route path="/invite/:token" element={<TakeTest />} />
+            <Route path="/invite/:token/session/:sessionId" element={<TestSession />} />
+            <Route path="/invite/:token/results/:sessionId" element={<TestResults />} />
             
             {/* Protected routes - single dashboard route that renders based on role */}
             <Route 
