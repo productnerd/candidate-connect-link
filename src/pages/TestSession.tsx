@@ -1,36 +1,16 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { QuestionOptions } from '@/components/test/QuestionOptions';
-import { Loader2, Clock, ChevronLeft, ChevronRight, Flag, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { Loader2, Brain } from 'lucide-react';
 import type { Tables, Json } from '@/integrations/supabase/types';
+import { TestInterface, type TestAnswer } from '@/components/test/TestInterface';
 
 type TestSession = Tables<'test_sessions'>;
 type TestQuestion = Tables<'test_questions'>;
 type TestLibrary = Tables<'test_library'>;
 
-interface Answer {
-  questionId: string;
-  answer: string;
-  flagged?: boolean;
-}
-
-export default function TestSession() {
+export default function TestSessionPage() {
   const { token, sessionId } = useParams<{ token: string; sessionId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -39,46 +19,14 @@ export default function TestSession() {
   const [session, setSession] = useState<TestSession | null>(null);
   const [test, setTest] = useState<TestLibrary | null>(null);
   const [questions, setQuestions] = useState<TestQuestion[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Answer[]>([]);
   const [timeRemaining, setTimeRemaining] = useState(0);
-  const [showSubmitDialog, setShowSubmitDialog] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSaveRef = useRef<number>(Date.now());
+  const [initialAnswers, setInitialAnswers] = useState<TestAnswer[]>([]);
+  const [initialIndex, setInitialIndex] = useState(0);
 
   useEffect(() => {
     loadSession();
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
-
-  useEffect(() => {
-    if (timeRemaining > 0 && !loading) {
-      timerRef.current = setInterval(() => {
-        setTimeRemaining(prev => {
-          if (prev <= 1) {
-            handleTimeUp();
-            return 0;
-          }
-          
-          // Auto-save every 30 seconds
-          if (Date.now() - lastSaveRef.current > 30000) {
-            saveProgress(prev - 1);
-            lastSaveRef.current = Date.now();
-          }
-          
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => {
-        if (timerRef.current) clearInterval(timerRef.current);
-      };
-    }
-  }, [loading, timeRemaining > 0]);
 
   const loadSession = async () => {
     if (!sessionId) return;
@@ -100,13 +48,13 @@ export default function TestSession() {
 
       setSession(sessionData);
       setTimeRemaining(sessionData.time_remaining_seconds || 0);
-      setCurrentIndex(sessionData.current_question_index || 0);
+      setInitialIndex(sessionData.current_question_index || 0);
       
       // Parse saved answers
       if (sessionData.answers) {
-        const savedAnswers = sessionData.answers as unknown as Answer[];
+        const savedAnswers = sessionData.answers as unknown as TestAnswer[];
         if (Array.isArray(savedAnswers)) {
-          setAnswers(savedAnswers);
+          setInitialAnswers(savedAnswers);
         }
       }
 
@@ -132,7 +80,6 @@ export default function TestSession() {
 
       if (linksError) throw linksError;
       
-      // Extract questions from links and flatten
       const questionsData = (linksData || [])
         .map(link => link.question)
         .filter((q): q is TestQuestion => q !== null);
@@ -150,7 +97,7 @@ export default function TestSession() {
     }
   };
 
-  const saveProgress = async (currentTime?: number) => {
+  const handleSaveProgress = async (answers: TestAnswer[], currentIndex: number, timeRemaining: number) => {
     if (!session) return;
 
     try {
@@ -159,7 +106,7 @@ export default function TestSession() {
         .update({
           answers: answers as unknown as Json,
           current_question_index: currentIndex,
-          time_remaining_seconds: currentTime ?? timeRemaining,
+          time_remaining_seconds: timeRemaining,
         })
         .eq('id', session.id);
     } catch (err) {
@@ -167,131 +114,85 @@ export default function TestSession() {
     }
   };
 
-  const handleTimeUp = async () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    await submitTest(true);
-  };
-
-  const handleAnswer = (questionId: string, answer: string) => {
-    setAnswers(prev => {
-      const existing = prev.findIndex(a => a.questionId === questionId);
-      if (existing >= 0) {
-        const updated = [...prev];
-        updated[existing] = { ...updated[existing], answer };
-        return updated;
-      }
-      return [...prev, { questionId, answer }];
-    });
-  };
-
-  const toggleFlag = (questionId: string) => {
-    setAnswers(prev => {
-      const existing = prev.findIndex(a => a.questionId === questionId);
-      if (existing >= 0) {
-        const updated = [...prev];
-        updated[existing] = { ...updated[existing], flagged: !updated[existing].flagged };
-        return updated;
-      }
-      return [...prev, { questionId, answer: '', flagged: true }];
-    });
-  };
-
-  const getCurrentAnswer = (questionId: string) => {
-    return answers.find(a => a.questionId === questionId);
-  };
-
-  const submitTest = async (timeUp = false) => {
+  const handleSubmit = async (answers: TestAnswer[], timeTakenSeconds: number) => {
     if (!session || !test || !token) return;
 
-    setSubmitting(true);
-    if (timerRef.current) clearInterval(timerRef.current);
+    // Calculate score
+    let score = 0;
+    const questionBreakdown = questions.map(q => {
+      const userAnswer = answers.find(a => a.questionId === q.id);
+      const isCorrect = userAnswer?.answer === q.correct_answer;
+      if (isCorrect) score += (q.points || 1);
+      return {
+        questionId: q.id,
+        userAnswer: userAnswer?.answer || null,
+        correctAnswer: q.correct_answer,
+        isCorrect,
+        points: isCorrect ? (q.points || 1) : 0,
+      };
+    });
 
-    try {
-      // Calculate score
-      let score = 0;
-      const questionBreakdown = questions.map(q => {
-        const userAnswer = answers.find(a => a.questionId === q.id);
-        const isCorrect = userAnswer?.answer === q.correct_answer;
-        if (isCorrect) score += (q.points || 1);
-        return {
-          questionId: q.id,
-          userAnswer: userAnswer?.answer || null,
-          correctAnswer: q.correct_answer,
-          isCorrect,
-          points: isCorrect ? (q.points || 1) : 0,
-        };
+    // Get invitation for candidate email
+    const { data: invitation } = await supabase
+      .from('test_invitations')
+      .select('*')
+      .eq('invitation_token', token)
+      .single();
+
+    // Create result
+    const { error: resultError } = await supabase
+      .from('test_results')
+      .insert({
+        session_id: session.id,
+        test_id: test.id,
+        invitation_id: invitation?.id || null,
+        organization_id: invitation?.organization_id || null,
+        candidate_email: invitation?.candidate_email || 'anonymous',
+        score,
+        time_taken_seconds: timeTakenSeconds,
+        question_breakdown: questionBreakdown as unknown as Json,
       });
 
-      const totalPoints = questions.reduce((sum, q) => sum + (q.points || 1), 0);
-      const percentage = totalPoints > 0 ? (score / totalPoints) * 100 : 0;
+    if (resultError) throw resultError;
 
-      // Get invitation for candidate email
-      const { data: invitation } = await supabase
-        .from('test_invitations')
-        .select('*')
-        .eq('invitation_token', token)
-        .single();
+    // Update session status
+    await supabase
+      .from('test_sessions')
+      .update({
+        status: 'completed',
+        end_time: new Date().toISOString(),
+        answers: answers as unknown as Json,
+      })
+      .eq('id', session.id);
 
-      // Create result (raw score only, no percentage stored)
-      const { error: resultError } = await supabase
-        .from('test_results')
-        .insert({
-          session_id: session.id,
-          test_id: test.id,
-          invitation_id: invitation?.id || null,
-          organization_id: invitation?.organization_id || null,
-          candidate_email: invitation?.candidate_email || 'anonymous',
-          score,
-          time_taken_seconds: (test.duration_minutes * 60) - timeRemaining,
-          question_breakdown: questionBreakdown as unknown as Json,
-        });
-
-      if (resultError) throw resultError;
-
-      // Update session status
+    // Update invitation status
+    if (invitation) {
       await supabase
-        .from('test_sessions')
+        .from('test_invitations')
         .update({
           status: 'completed',
-          end_time: new Date().toISOString(),
-          answers: answers as unknown as Json,
+          completed_at: new Date().toISOString(),
         })
-        .eq('id', session.id);
-
-      // Update invitation status
-      if (invitation) {
-        await supabase
-          .from('test_invitations')
-          .update({
-            status: 'completed',
-            completed_at: new Date().toISOString(),
-          })
-          .eq('id', invitation.id);
-      }
-
-      navigate(`/invite/${token}/results/${session.id}`);
-
-    } catch (err) {
-      console.error('Error submitting test:', err);
-      toast({
-        title: 'Error',
-        description: 'Failed to submit test. Please try again.',
-        variant: 'destructive',
-      });
-      setSubmitting(false);
+        .eq('id', invitation.id);
     }
+
+    navigate(`/invite/${token}/results/${session.id}`);
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const handleExit = () => {
+    // For invited tests, warn before exit
+    if (confirm('Are you sure you want to exit? Your progress will be saved but you may not be able to resume.')) {
+      navigate(`/invite/${token}`);
+    }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
+          <div className="p-4 rounded-full bg-primary/10">
+            <Brain className="h-12 w-12 text-primary animate-pulse" />
+          </div>
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-muted-foreground">Loading test...</p>
         </div>
@@ -299,203 +200,18 @@ export default function TestSession() {
     );
   }
 
-  const currentQuestion = questions[currentIndex];
-  const answeredCount = answers.filter(a => a.answer).length;
-  const flaggedCount = answers.filter(a => a.flagged).length;
-  const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
-
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="border-b bg-card sticky top-0 z-50">
-        <div className="container py-3">
-          <div className="flex items-center justify-between gap-4">
-            {/* Progress */}
-            <div className="flex items-center gap-4 flex-1">
-              <div className="hidden sm:block">
-                <p className="text-sm font-medium">{test?.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  Question {currentIndex + 1} of {questions.length}
-                </p>
-              </div>
-              <Progress value={progress} className="w-32 sm:w-48" />
-            </div>
-
-            {/* Timer */}
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-              timeRemaining < 60 ? 'bg-destructive/10 text-destructive' : 
-              timeRemaining < 300 ? 'bg-warning/10 text-warning' : 
-              'bg-muted'
-            }`}>
-              <Clock className="h-4 w-4" />
-              <span className="font-mono font-bold text-lg">{formatTime(timeRemaining)}</span>
-            </div>
-
-            {/* Spacer for balance */}
-            <div className="w-24" />
-          </div>
-        </div>
-      </header>
-
-      {/* Question */}
-      <main className="flex-1 container py-8">
-        <div className="max-w-3xl mx-auto">
-          {currentQuestion ? (
-            <Card>
-              <CardContent className="pt-6">
-                {/* Question Header */}
-                <div className="flex items-start justify-between mb-6">
-                  <Badge variant="secondary">
-                    Question {currentIndex + 1}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleFlag(currentQuestion.id)}
-                    className={getCurrentAnswer(currentQuestion.id)?.flagged ? 'text-warning' : ''}
-                  >
-                    <Flag className="h-4 w-4 mr-1" />
-                    {getCurrentAnswer(currentQuestion.id)?.flagged ? 'Flagged' : 'Flag for review'}
-                  </Button>
-                </div>
-
-                {/* Question Text */}
-                <p className="text-lg mb-8">{currentQuestion.question_text}</p>
-
-                {/* Options */}
-                {currentQuestion.question_type === 'multiple_choice' && currentQuestion.options && (
-                  <QuestionOptions
-                    options={currentQuestion.options as string[]}
-                    selectedAnswer={getCurrentAnswer(currentQuestion.id)?.answer || null}
-                    onSelect={(value) => handleAnswer(currentQuestion.id, value)}
-                    category={(currentQuestion as any).category}
-                  />
-                )}
-
-                {currentQuestion.question_type === 'true_false' && (
-                  <QuestionOptions
-                    options={['True', 'False']}
-                    selectedAnswer={getCurrentAnswer(currentQuestion.id)?.answer || null}
-                    onSelect={(value) => handleAnswer(currentQuestion.id, value)}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">No questions available</p>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Navigation */}
-          <div className="flex items-center justify-between mt-6">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
-              disabled={currentIndex === 0}
-            >
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              Previous
-            </Button>
-
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>{answeredCount} answered</span>
-              {flaggedCount > 0 && (
-                <>
-                  <span>•</span>
-                  <span className="text-warning">{flaggedCount} flagged</span>
-                </>
-              )}
-            </div>
-
-            <Button
-              onClick={() => setCurrentIndex(prev => Math.min(questions.length - 1, prev + 1))}
-              disabled={currentIndex === questions.length - 1}
-            >
-              Next
-              <ChevronRight className="h-4 w-4 ml-2" />
-            </Button>
-          </div>
-
-          {/* Question Navigator */}
-          <div className="mt-8 p-4 bg-muted/30 rounded-lg">
-            <p className="text-sm font-medium mb-3">Question Navigator</p>
-            <div className="flex flex-wrap gap-2">
-              {questions.map((q, idx) => {
-                const answer = getCurrentAnswer(q.id);
-                return (
-                  <button
-                    key={q.id}
-                    onClick={() => setCurrentIndex(idx)}
-                    className={`w-8 h-8 rounded text-sm font-medium transition-colors ${
-                      idx === currentIndex
-                        ? 'bg-primary text-primary-foreground'
-                        : answer?.answer
-                        ? 'bg-success/20 text-success'
-                        : answer?.flagged
-                        ? 'bg-warning/20 text-warning'
-                        : 'bg-muted hover:bg-muted/80'
-                    }`}
-                  >
-                    {idx + 1}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* Submit Dialog */}
-      <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Submit Test?</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-4">
-                <p>Are you sure you want to submit your test?</p>
-                <div className="p-4 bg-muted rounded-lg space-y-2">
-                  <p className="flex justify-between">
-                    <span>Questions answered:</span>
-                    <span className="font-medium">{answeredCount} of {questions.length}</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>Unanswered:</span>
-                    <span className="font-medium">{questions.length - answeredCount}</span>
-                  </p>
-                  {flaggedCount > 0 && (
-                    <p className="flex justify-between text-warning">
-                      <span>Flagged for review:</span>
-                      <span className="font-medium">{flaggedCount}</span>
-                    </p>
-                  )}
-                </div>
-                {questions.length - answeredCount > 0 && (
-                  <div className="flex items-start gap-2 p-3 bg-warning/10 rounded-lg text-warning text-sm">
-                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-                    <span>You have unanswered questions. Unanswered questions will be marked as incorrect.</span>
-                  </div>
-                )}
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={submitting}>Continue Test</AlertDialogCancel>
-            <AlertDialogAction onClick={() => submitTest()} disabled={submitting}>
-              {submitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                'Submit Test'
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+    <TestInterface
+      mode="invited"
+      testName={test?.name || 'CCAT Assessment'}
+      questions={questions}
+      initialTimeRemaining={timeRemaining}
+      initialAnswers={initialAnswers}
+      initialIndex={initialIndex}
+      onSubmit={handleSubmit}
+      onExit={handleExit}
+      onSaveProgress={handleSaveProgress}
+      showQuestionNavigator={true}
+    />
   );
 }
