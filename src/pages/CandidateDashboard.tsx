@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { 
   ClipboardList, 
   Trophy, 
@@ -19,7 +21,9 @@ import {
   TrendingUp,
   Brain,
   MessageSquare,
-  Shapes
+  Shapes,
+  ShoppingCart,
+  Lock
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -52,9 +56,13 @@ interface TestHistoryEntry {
 
 export default function CandidateDashboard() {
   const { profile, user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [invitations, setInvitations] = useState<TestInvitation[]>([]);
   const [testHistory, setTestHistory] = useState<TestHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasPaidAccess, setHasPaidAccess] = useState(false);
+  const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -62,8 +70,43 @@ export default function CandidateDashboard() {
     } else {
       setLoading(false);
     }
+    
+    // Check for payment success redirect
+    const paymentStatus = searchParams.get('payment');
+    const sessionId = searchParams.get('session_id');
+    
+    if (paymentStatus === 'success' && sessionId) {
+      // Verify the payment and activate premium access
+      const verifyPayment = async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke('verify-payment', {
+            body: { session_id: sessionId },
+          });
+          
+          if (error) throw error;
+          
+          if (data?.success) {
+            toast.success('Payment successful! Your premium access is now active.');
+            setHasPaidAccess(true);
+            // Refetch data to show updated state
+            fetchData();
+          }
+        } catch (error) {
+          console.error('Payment verification error:', error);
+          toast.error('Failed to verify payment. Please contact support.');
+        }
+        
+        // Clear the query params
+        setSearchParams({});
+      };
+      
+      verifyPayment();
+    } else if (paymentStatus === 'cancelled') {
+      toast.info('Payment was cancelled.');
+      setSearchParams({});
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, profile]);
+  }, [user, profile, searchParams]);
 
   const fetchData = async () => {
     try {
@@ -92,11 +135,46 @@ export default function CandidateDashboard() {
         if (!historyError) {
           setTestHistory(historyData || []);
         }
+        
+        // Check if user has paid access by checking test_bundles
+        // A paid candidate will have a bundle record
+        const { data: bundleData, error: bundleError } = await supabase
+          .from('test_bundles')
+          .select('id')
+          .limit(1);
+        
+        if (!bundleError && bundleData && bundleData.length > 0) {
+          setHasPaidAccess(true);
+        } else {
+          // Also check user metadata for paid status (legacy check)
+          const isPaid = user.user_metadata?.has_premium_access === true;
+          setHasPaidAccess(isPaid);
+        }
       }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePurchaseBundle = async () => {
+    setCheckoutLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { bundle_type: 'candidate_unlimited' },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('Failed to start checkout. Please try again.');
+    } finally {
+      setCheckoutLoading(false);
     }
   };
 
@@ -226,7 +304,7 @@ export default function CandidateDashboard() {
                 <div className="flex flex-wrap gap-2">
                   {pendingTests.map((invitation) => (
                     <Button key={invitation.id} variant="outline" size="sm" asChild>
-                      <Link to={`/test/${invitation.invitation_token}`}>
+                      <Link to={`/invite/${invitation.invitation_token}`}>
                         <Play className="h-3 w-3 mr-1" />
                         {invitation.test_library?.name || 'Assessment'}
                       </Link>
@@ -362,40 +440,76 @@ export default function CandidateDashboard() {
         </CardTitle>
         <TooltipProvider>
           <div className="grid md:grid-cols-[1fr_auto_1fr] gap-6 mb-8">
-            {/* Mock Test Card */}
-            <Card className="card-elevated hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-lg bg-primary/10">
-                    <Zap className="h-6 w-6 text-primary" />
+            {/* First Card - Mock Test (paid) or Practice Test (free) */}
+            {hasPaidAccess ? (
+              <Card className="card-elevated hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-lg bg-primary/10">
+                      <Zap className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle>Mock Test</CardTitle>
+                      <CardDescription>Timed practice with premium questions</CardDescription>
+                    </div>
                   </div>
-                  <div>
-                    <CardTitle>Mock Test</CardTitle>
-                    <CardDescription>Timed practice with premium questions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="text-sm text-muted-foreground space-y-1 mb-4">
+                    <li>• 50 questions</li>
+                    <li>• 15 minute countdown</li>
+                    <li>• Answers revealed at the end</li>
+                  </ul>
+                  <UITooltip>
+                    <TooltipTrigger asChild>
+                      <Button className="w-full" asChild>
+                        <Link to="/candidate/mock">
+                          <Zap className="h-4 w-4 mr-2" />
+                          Start
+                        </Link>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>We'll generate a random test from a bank of 100s of questions</p>
+                    </TooltipContent>
+                  </UITooltip>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="card-elevated hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-lg bg-primary/10">
+                      <Play className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle>Practice Test</CardTitle>
+                      <CardDescription>Try a free sample assessment</CardDescription>
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="text-sm text-muted-foreground space-y-1 mb-4">
-                  <li>• 50 questions</li>
-                  <li>• 15 minute countdown</li>
-                  <li>• Answers revealed at the end</li>
-                </ul>
-                <UITooltip>
-                  <TooltipTrigger asChild>
-                    <Button className="w-full" asChild>
-                      <Link to="/candidate/mock">
-                        <Zap className="h-4 w-4 mr-2" />
-                        Start
-                      </Link>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>We'll generate a random test from a bank of 100s of questions</p>
-                  </TooltipContent>
-                </UITooltip>
-              </CardContent>
-            </Card>
+                </CardHeader>
+                <CardContent>
+                  <ul className="text-sm text-muted-foreground space-y-1 mb-4">
+                    <li>• 50 questions</li>
+                    <li>• 15 minute countdown</li>
+                    <li>• See how you score</li>
+                  </ul>
+                  <UITooltip>
+                    <TooltipTrigger asChild>
+                      <Button className="w-full" asChild>
+                        <Link to="/candidate/practice">
+                          <Play className="h-4 w-4 mr-2" />
+                          Take Practice Test
+                        </Link>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Take a free practice test to see what the CCAT is like</p>
+                    </TooltipContent>
+                  </UITooltip>
+                </CardContent>
+              </Card>
+            )}
 
             {/* OR Divider */}
             <div className="hidden md:flex items-center justify-center">
@@ -406,42 +520,98 @@ export default function CandidateDashboard() {
               </div>
             </div>
 
-            {/* Learning Mode Test Card */}
-            <Card className="card-elevated hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-lg bg-primary/10">
-                    <BookOpen className="h-6 w-6 text-primary" />
+            {/* Second Card - Learning Mode (paid) or Purchase Bundle (free) */}
+            {hasPaidAccess ? (
+              <Card className="card-elevated hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-lg bg-primary/10">
+                      <BookOpen className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle>Learning Mode Test</CardTitle>
+                      <CardDescription>Practice at your own pace</CardDescription>
+                    </div>
                   </div>
-                  <div>
-                    <CardTitle>Learning Mode Test</CardTitle>
-                    <CardDescription>Practice at your own pace</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="text-sm text-muted-foreground space-y-1 mb-4">
+                    <li>• 50 questions</li>
+                    <li>• No time pressure</li>
+                    <li>• Instant feedback after each answer</li>
+                  </ul>
+                  <UITooltip>
+                    <TooltipTrigger asChild>
+                      <Button className="w-full" asChild>
+                        <Link to="/candidate/learn">
+                          <BookOpen className="h-4 w-4 mr-2" />
+                          Start
+                        </Link>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>We'll generate a random test from a bank of 100s of questions</p>
+                    </TooltipContent>
+                  </UITooltip>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="card-elevated hover:shadow-lg transition-shadow border-primary/20">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-lg bg-primary/10">
+                      <ShoppingCart className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle>Unlock Premium Access</CardTitle>
+                      <CardDescription>Get unlimited practice tests</CardDescription>
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="text-sm text-muted-foreground space-y-1 mb-4">
-                  <li>• 50 questions</li>
-                  <li>• No time pressure</li>
-                  <li>• Instant feedback after each answer</li>
-                </ul>
-                <UITooltip>
-                  <TooltipTrigger asChild>
-                    <Button className="w-full" asChild>
-                      <Link to="/candidate/learn">
-                        <Zap className="h-4 w-4 mr-2" />
-                        Start
-                      </Link>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>We'll generate a random test from a bank of 100s of questions</p>
-                  </TooltipContent>
-                </UITooltip>
-              </CardContent>
-            </Card>
+                </CardHeader>
+                <CardContent>
+                  <ul className="text-sm text-muted-foreground space-y-1 mb-4">
+                    <li>• Unlimited mock tests</li>
+                    <li>• Learning mode with explanations</li>
+                    <li>• Track your progress over time</li>
+                  </ul>
+                  <Button 
+                    className="w-full" 
+                    onClick={() => setShowCheckoutDialog(true)}
+                  >
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    Purchase Bundle – €14
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </TooltipProvider>
+
+        {/* Premium Features Locked Banner (for free users) */}
+        {!hasPaidAccess && (
+          <Card className="card-elevated mb-8 border-dashed border-muted-foreground/30">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Lock className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium text-sm">Premium features locked</p>
+                    <p className="text-xs text-muted-foreground">
+                      Purchase the Unlimited Bundle to access Mock Tests and Learning Mode
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowCheckoutDialog(true)}
+                >
+                  Learn More
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Recent Tests */}
         {testHistory.length > 0 && (
@@ -499,6 +669,61 @@ export default function CandidateDashboard() {
           </Card>
         )}
       </main>
+
+      {/* Checkout Dialog */}
+      <Dialog open={showCheckoutDialog} onOpenChange={setShowCheckoutDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Unlock Unlimited Practice</DialogTitle>
+            <DialogDescription>
+              Get full access to all premium features
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-primary" />
+                <span className="text-sm">Unlimited mock tests with timer</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-primary" />
+                <span className="text-sm">Learning mode with explanations</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-primary" />
+                <span className="text-sm">Progress tracking & analytics</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-primary" />
+                <span className="text-sm">100s of premium questions</span>
+              </div>
+            </div>
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-lg font-semibold">Unlimited Bundle</span>
+                <span className="text-2xl font-bold">€14</span>
+              </div>
+              <Button 
+                className="w-full" 
+                onClick={handlePurchaseBundle}
+                disabled={checkoutLoading}
+              >
+                {checkoutLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    Purchase Now
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

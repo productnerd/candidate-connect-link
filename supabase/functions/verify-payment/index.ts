@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -45,6 +46,77 @@ serve(async (req) => {
     }
 
     console.log("Payment verified for:", customerEmail);
+
+    // For candidate bundles, create a test_bundles record to track premium access
+    const bundleType = session.metadata?.bundle_type;
+    if (bundleType === 'candidate_unlimited' && customerEmail) {
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      );
+
+      // Look up the user by email
+      const { data: existingUsers } = await supabase.auth.admin.listUsers();
+      const existingUser = existingUsers?.users?.find(
+        u => u.email?.toLowerCase() === customerEmail.toLowerCase()
+      );
+
+      if (existingUser) {
+        // Get or create an org for the candidate (they need one for test_bundles)
+        // For candidates, we'll create a personal "org" with their user ID
+        let orgId: string | null = null;
+        
+        // Check if user has a profile with org
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('organization_id')
+          .eq('id', existingUser.id)
+          .single();
+        
+        if (profile?.organization_id) {
+          orgId = profile.organization_id;
+        } else {
+          // Create a personal org for the candidate
+          const { data: newOrg, error: orgError } = await supabase
+            .from('organizations')
+            .insert({
+              name: `${customerEmail}'s Account`,
+              slug: `candidate-${existingUser.id}`,
+            })
+            .select('id')
+            .single();
+          
+          if (!orgError && newOrg) {
+            orgId = newOrg.id;
+            // Update profile with org
+            await supabase
+              .from('profiles')
+              .update({ organization_id: orgId })
+              .eq('id', existingUser.id);
+          }
+        }
+
+        if (orgId) {
+          // Create the bundle record
+          const { error: bundleError } = await supabase
+            .from('test_bundles')
+            .insert({
+              organization_id: orgId,
+              bundle_type: 'starter', // Using starter as a placeholder for unlimited
+              tests_purchased: 9999,
+              tests_remaining: 9999,
+              amount_paid: 1400, // €14 in cents
+              stripe_payment_id: session.id,
+            });
+
+          if (bundleError) {
+            console.error("Error creating bundle record:", bundleError);
+          } else {
+            console.log("Created bundle record for candidate:", customerEmail);
+          }
+        }
+      }
+    }
 
     return new Response(
       JSON.stringify({
