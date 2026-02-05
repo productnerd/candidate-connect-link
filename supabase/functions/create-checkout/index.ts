@@ -83,14 +83,16 @@ serve(async (req) => {
     // Determine success/cancel URLs based on bundle type
     const origin = req.headers.get("origin") || "https://lovable.dev";
     
-    // Success URL now goes to payment-success page with parameters
-    // We'll use Stripe's checkout.session.completed event data to populate the email
-    const successUrl = `${origin}/payment-success?bundle_type=${bundle_type}&session_id={CHECKOUT_SESSION_ID}`;
-    
     const isEmployer = bundle_type.startsWith("employer_");
-    const cancelUrl = isEmployer 
+    
+    // Success URL: Employers go to payment-success for signup, Candidates go to dashboard
+    const successUrl = isEmployer
+      ? `${origin}/payment-success?bundle_type=${bundle_type}&session_id={CHECKOUT_SESSION_ID}`
+      : `${origin}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`;
+    
+    const cancelUrl = isEmployer
       ? `${origin}/employer?payment=cancelled`
-      : `${origin}/candidate?payment=cancelled`;
+      : `${origin}/dashboard?payment=cancelled`;
 
     // Get product metadata for the session
     const bundleDescriptions: Record<string, { name: string; tests?: number }> = {

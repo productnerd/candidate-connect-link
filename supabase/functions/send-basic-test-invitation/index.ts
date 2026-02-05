@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { createClient as createAdminClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -334,6 +335,69 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     console.log("Inviter confirmation email sent:", inviterEmailResponse);
+
+    // Auto-create candidate account silently
+    const adminClient = createAdminClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    // Check if user already exists
+    const { data: existingUsers } = await adminClient.auth.admin.listUsers();
+    const existingUser = existingUsers?.users?.find(
+      u => u.email?.toLowerCase() === candidateEmail.toLowerCase().trim()
+    );
+
+    if (!existingUser) {
+      // Create new user with a random password (they'll use magic link to login)
+      const randomPassword = crypto.randomUUID() + crypto.randomUUID();
+      const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+        email: candidateEmail.toLowerCase().trim(),
+        password: randomPassword,
+        email_confirm: true, // Auto-confirm so they can login via magic link
+        user_metadata: {
+          full_name: candidateName.trim(),
+          invited_by_employer: true,
+        },
+      });
+
+      if (createError) {
+        console.error("Error creating candidate account:", createError);
+        // Don't fail the invitation - the candidate can still use the anonymous flow
+      } else {
+        console.log("Created candidate account for:", candidateEmail);
+
+        // Create profile and role records for the new user
+        if (newUser?.user) {
+          const { error: profileError } = await adminClient
+            .from('profiles')
+            .insert({
+              id: newUser.user.id,
+              email: candidateEmail.toLowerCase().trim(),
+              full_name: candidateName.trim(),
+              role: 'candidate',
+            });
+
+          if (profileError) {
+            console.error("Error creating profile:", profileError);
+          }
+
+          const { error: roleError } = await adminClient
+            .from('user_roles')
+            .insert({
+              user_id: newUser.user.id,
+              role: 'candidate',
+            });
+
+          if (roleError) {
+            console.error("Error creating role:", roleError);
+          }
+        }
+      }
+    } else {
+      console.log("Candidate account already exists:", candidateEmail);
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
