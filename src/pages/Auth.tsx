@@ -62,7 +62,7 @@ export default function Auth() {
                   Welcome back to<br />
                   <span className="text-gradient-hero">CCAT Platform</span>
                 </h1>
-                <p className="text-lg text-primary-foreground/80 max-w-md">
+                <p className="text-lg text-background/80 max-w-md">
                   Sign in to view your test results, track your progress, and access your assessment history.
                 </p>
               </>}
