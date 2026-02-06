@@ -350,9 +350,7 @@ export default function SendTest() {
 
       if (insertError) throw insertError;
 
-      toast.success('Invitation sent!', {
-        description: `Email sent to ${data.candidateName}`,
-      });
+      // Success screen is sufficient — no toast needed
       setCreatedInvitation({ token, name: data.candidateName });
     } catch (error: any) {
       console.error('Error creating invitation:', error);
