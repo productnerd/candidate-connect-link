@@ -387,21 +387,23 @@ export default function SendTest() {
       >
         <div className="absolute inset-0 bg-foreground/70" />
         
-        {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center p-12 w-full">
-          <div className="text-center mb-8">
-            <p className="text-primary-foreground/80 text-sm uppercase tracking-wider mb-2">Email Preview</p>
-            <h2 className="text-2xl font-bold text-primary-foreground">What your candidate will receive</h2>
+        {/* Content - hidden on success */}
+        {!createdInvitation && (
+          <div className="relative z-10 flex flex-col items-center justify-center p-12 w-full">
+            <div className="text-center mb-8">
+              <p className="text-primary-foreground/80 text-sm uppercase tracking-wider mb-2">Email Preview</p>
+              <h2 className="text-2xl font-bold text-primary-foreground">What your candidate will receive</h2>
+            </div>
+            
+            {/* Live Email Preview */}
+            <EmailPreview
+              inviterName={watchedValues.inviterName}
+              companyName={watchedValues.companyName}
+              candidateName={watchedValues.candidateName}
+              testName={selectedTest?.name || ''}
+            />
           </div>
-          
-          {/* Live Email Preview */}
-          <EmailPreview
-            inviterName={watchedValues.inviterName}
-            companyName={watchedValues.companyName}
-            candidateName={watchedValues.candidateName}
-            testName={selectedTest?.name || ''}
-          />
-        </div>
+        )}
       </div>
 
       {/* Right side - Form */}
