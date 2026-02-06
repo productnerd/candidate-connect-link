@@ -215,7 +215,7 @@ export default function EmployerDashboard() {
                   <Send className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-bold font-serif">{stats.totalInvitations}/{stats.totalInvitations + stats.testsRemaining}</div>
+                  <div className="text-4xl font-bold font-display">{stats.totalInvitations}/{stats.totalInvitations + stats.testsRemaining}</div>
                   <div className="mt-2">
                     <Button 
                       variant="secondary" 
@@ -235,7 +235,7 @@ export default function EmployerDashboard() {
                   <Clock className="h-4 w-4 text-warning" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-bold font-serif text-warning">{stats.pendingInvitations}</div>
+                  <div className="text-4xl font-bold font-display text-warning">{stats.pendingInvitations}</div>
                   <p className="text-xs text-muted-foreground mt-1">Awaiting completion</p>
                 </CardContent>
               </Card>
@@ -246,7 +246,7 @@ export default function EmployerDashboard() {
                   <CheckCircle className="h-4 w-4 text-success" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-bold font-serif text-success">{stats.completedTests}</div>
+                  <div className="text-4xl font-bold font-display text-success">{stats.completedTests}</div>
                   <p className="text-xs text-muted-foreground mt-1">Tests finished</p>
                 </CardContent>
               </Card>
@@ -313,7 +313,7 @@ export default function EmployerDashboard() {
                               {isCompleted && result ? (
                                 <>
                                   <div className="text-right">
-                                    <p className="font-bold font-serif text-sm">{scorePercent}%</p>
+                                    <p className="font-bold font-display text-sm">{scorePercent}%</p>
                                     <p className="text-xs text-muted-foreground">{Math.min(result.score, questionCount)}/{questionCount}</p>
                                   </div>
                                   {resultsUrl && (
@@ -453,7 +453,7 @@ function AnalyticsTab({ invitations, stats }: { invitations: any[]; stats: Dashb
             <TrendingUp className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold font-serif text-primary">{avgScore !== null ? `${avgScore}%` : '—'}</div>
+            <div className="text-4xl font-bold font-display text-primary">{avgScore !== null ? `${avgScore}%` : '—'}</div>
             <p className="text-xs text-muted-foreground mt-1">Across all completed tests</p>
           </CardContent>
         </Card>
@@ -464,7 +464,7 @@ function AnalyticsTab({ invitations, stats }: { invitations: any[]; stats: Dashb
             <Users className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold font-serif">{completionRate}%</div>
+            <div className="text-4xl font-bold font-display">{completionRate}%</div>
             <p className="text-xs text-muted-foreground mt-1">{stats.completedTests} of {invitations.length} invitations</p>
           </CardContent>
         </Card>
@@ -475,7 +475,7 @@ function AnalyticsTab({ invitations, stats }: { invitations: any[]; stats: Dashb
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold font-serif">{invitations.length}</div>
+            <div className="text-4xl font-bold font-display">{invitations.length}</div>
             <p className="text-xs text-muted-foreground mt-1">All time</p>
           </CardContent>
         </Card>
