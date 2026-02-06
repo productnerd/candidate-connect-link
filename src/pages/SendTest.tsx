@@ -317,34 +317,56 @@ export default function SendTest() {
       if (insertError) throw insertError;
 
       // Send email via edge function
-      try {
-        const { error: emailError } = await supabase.functions.invoke('send-basic-test-invitation', {
-          body: {
-            candidateEmail: candidateEmailNorm,
-            candidateName: data.candidateName.trim(),
-            testName: selectedTestData?.name || 'Assessment',
-            inviterName: data.inviterName.trim(),
-            inviterEmail: inviterEmailNorm,
-            companyName: data.companyName.trim(),
-            invitationToken: token,
-            expiresAt: expiresAt.toISOString(),
-            baseUrl: window.location.origin,
-          },
-        });
+      const { data: fnData, error: emailError } = await supabase.functions.invoke('send-basic-test-invitation', {
+        body: {
+          candidateEmail: candidateEmailNorm,
+          candidateName: data.candidateName.trim(),
+          testName: selectedTestData?.name || 'Assessment',
+          inviterName: data.inviterName.trim(),
+          inviterEmail: inviterEmailNorm,
+          companyName: data.companyName.trim(),
+          invitationToken: token,
+          expiresAt: expiresAt.toISOString(),
+          baseUrl: window.location.origin,
+        },
+      });
 
-        if (emailError) {
-          console.error('Failed to send email:', emailError);
-          toast.warning('Invitation created, but email could not be sent. Please share the link manually.');
-        } else {
-          toast.success('Invitation sent!', {
-            description: `Email sent to ${data.candidateName}`,
-          });
-        }
-      } catch (emailErr) {
-        console.error('Email sending failed:', emailErr);
-        toast.warning('Invitation created, but email could not be sent. Please share the link manually.');
+      // Check for edge function errors (rate limits, cooldown, etc.)
+      if (emailError) {
+        console.error('Edge function error:', emailError);
+        // Parse error message from the response
+        const errorMsg = typeof emailError === 'object' && emailError.message
+          ? emailError.message
+          : typeof fnData === 'object' && fnData?.error
+          ? fnData.error
+          : String(emailError);
+
+        // Delete the just-inserted invitation since email failed
+        await supabase
+          .from('test_invitations')
+          .delete()
+          .eq('invitation_token', token);
+
+        toast.error(errorMsg || 'Failed to send invitation. Please try again.');
+        setSending(false);
+        return;
       }
 
+      // Check if response body contains an error (non-2xx parsed by invoke)
+      if (fnData && typeof fnData === 'object' && fnData.error) {
+        await supabase
+          .from('test_invitations')
+          .delete()
+          .eq('invitation_token', token);
+
+        toast.error(fnData.error);
+        setSending(false);
+        return;
+      }
+
+      toast.success('Invitation sent!', {
+        description: `Email sent to ${data.candidateName}`,
+      });
       setCreatedInvitation({ token, name: data.candidateName });
     } catch (error: any) {
       console.error('Error creating invitation:', error);
