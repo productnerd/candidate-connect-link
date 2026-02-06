@@ -24,7 +24,7 @@ import {
   Shapes,
   ShoppingCart
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TestInvitation {
@@ -329,7 +329,13 @@ export default function CandidateDashboard() {
             <CardContent>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}>
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#f97316" stopOpacity={0.8} />
+                        <stop offset="100%" stopColor="#f97316" stopOpacity={0.2} />
+                      </linearGradient>
+                    </defs>
                     <CartesianGrid 
                       strokeDasharray="3 3" 
                       stroke="hsl(var(--border))" 
@@ -358,15 +364,17 @@ export default function CandidateDashboard() {
                       labelStyle={{ color: 'hsl(var(--foreground))' }}
                       formatter={(value: number) => [`${value}%`, 'Score']}
                     />
-                    <Line 
+                    <Area 
                       type="monotone" 
                       dataKey="score" 
-                      stroke="hsl(var(--primary))"
+                      stroke="#f97316"
                       strokeWidth={2}
-                      dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2 }}
-                      activeDot={{ r: 6, fill: 'hsl(var(--primary))' }}
+                      fill="url(#scoreGradient)"
+                      dot={{ fill: '#f97316', strokeWidth: 2, stroke: '#fff' }}
+                      activeDot={{ r: 6, fill: '#f97316', stroke: '#fff', strokeWidth: 2 }}
+                      connectNulls={false}
                     />
-                  </LineChart>
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
