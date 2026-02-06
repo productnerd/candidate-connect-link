@@ -61,7 +61,7 @@ export default function Dashboard() {
     <>
       {hasBothRoles && (
         <div className="flex justify-center py-4 bg-muted/30 border-b">
-          <div className="flex items-center glass-card p-1" style={{ transform: 'none' }}>
+          <div className="flex items-center glass-card p-1 !transform-none hover:!transform-none">
             <button
               onClick={() => setActiveView('employer')}
               className={`px-4 py-2 rounded-xl text-[10px] font-medium uppercase tracking-wider transition-all duration-300 ${
