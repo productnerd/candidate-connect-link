@@ -236,7 +236,7 @@ export default function EmployerDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-4xl font-bold font-display text-warning">{stats.pendingInvitations}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Awaiting completion</p>
+                  
                 </CardContent>
               </Card>
 
@@ -247,7 +247,7 @@ export default function EmployerDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-4xl font-bold font-display text-success">{stats.completedTests}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Tests finished</p>
+                  
                 </CardContent>
               </Card>
             </div>
@@ -313,7 +313,13 @@ export default function EmployerDashboard() {
                               {isCompleted && result ? (
                                 <>
                                   <div className="text-right">
-                                    <p className="font-bold font-display text-sm">{scorePercent}%</p>
+                                    <p className={`font-bold font-display text-sm ${
+                                      scorePercent! >= 90 ? 'text-emerald-500' :
+                                      scorePercent! >= 80 ? 'text-green-600' :
+                                      scorePercent! >= 70 ? 'text-lime-500' :
+                                      scorePercent! >= 40 ? 'text-orange-500' :
+                                      'text-orange-300'
+                                    }`}>{scorePercent}%</p>
                                     <p className="text-xs text-muted-foreground">{Math.min(result.score, questionCount)}/{questionCount}</p>
                                   </div>
                                   {resultsUrl && (
