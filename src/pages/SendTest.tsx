@@ -200,13 +200,10 @@ export default function SendTest() {
 
   // Auto-set CCAT test when tests load
   useEffect(() => {
-    if (tests.length > 0 && !form.watch('testId')) {
+    if (tests.length > 0) {
       const ccatTest = tests.find(t => t.name.toLowerCase().includes('ccat'));
-      if (ccatTest) {
-        form.setValue('testId', ccatTest.id);
-      } else {
-        form.setValue('testId', tests[0].id);
-      }
+      const testId = ccatTest ? ccatTest.id : tests[0].id;
+      form.setValue('testId', testId, { shouldValidate: true });
     }
   }, [tests, form]);
 
