@@ -377,7 +377,7 @@ export default function SendTest() {
         {!createdInvitation && (
           <div className="relative z-10 flex flex-col items-center justify-center p-12 w-full">
             <div className="text-center mb-8">
-              <p className="text-primary-foreground/80 text-sm uppercase tracking-wider mb-2">Email Preview</p>
+              <p className="text-background/60 text-sm uppercase tracking-wider mb-2">Email Preview</p>
               <h2 className="text-2xl font-bold text-primary-foreground">What your candidate will receive</h2>
             </div>
             
