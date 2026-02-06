@@ -295,25 +295,7 @@ export default function SendTest() {
       expiresAt.setDate(expiresAt.getDate() + 7);
       const selectedTestData = tests.find(t => t.id === data.testId);
 
-      const { error: insertError } = await supabase
-        .from('test_invitations')
-        .insert({
-          organization_id: null,
-          test_id: data.testId,
-          candidate_email: candidateEmailNorm,
-          candidate_name: data.candidateName.trim(),
-          invited_by: null,
-          invitation_token: token,
-          expires_at: expiresAt.toISOString(),
-          inviter_name: data.inviterName.trim(),
-          inviter_email: inviterEmailNorm,
-          company_name: data.companyName.trim(),
-          test_type: 'basic',
-        });
-
-      if (insertError) throw insertError;
-
-      // Send email via edge function
+      // Send email via edge function FIRST (before DB insert to avoid race condition)
       const { data: fnData, error: emailError } = await supabase.functions.invoke('send-basic-test-invitation', {
         body: {
           candidateEmail: candidateEmailNorm,
@@ -331,35 +313,42 @@ export default function SendTest() {
       // Check for edge function errors (rate limits, cooldown, etc.)
       if (emailError) {
         console.error('Edge function error:', emailError);
-        // Parse error message from the response
         const errorMsg = typeof emailError === 'object' && emailError.message
           ? emailError.message
           : typeof fnData === 'object' && fnData?.error
           ? fnData.error
           : String(emailError);
 
-        // Delete the just-inserted invitation since email failed
-        await supabase
-          .from('test_invitations')
-          .delete()
-          .eq('invitation_token', token);
-
         toast.error(errorMsg || 'Failed to send invitation. Please try again.');
         setSending(false);
         return;
       }
 
-      // Check if response body contains an error (non-2xx parsed by invoke)
+      // Check if response body contains an error
       if (fnData && typeof fnData === 'object' && fnData.error) {
-        await supabase
-          .from('test_invitations')
-          .delete()
-          .eq('invitation_token', token);
-
         toast.error(fnData.error);
         setSending(false);
         return;
       }
+
+      // Edge function succeeded, now insert the invitation record
+      const { error: insertError } = await supabase
+        .from('test_invitations')
+        .insert({
+          organization_id: null,
+          test_id: data.testId,
+          candidate_email: candidateEmailNorm,
+          candidate_name: data.candidateName.trim(),
+          invited_by: null,
+          invitation_token: token,
+          expires_at: expiresAt.toISOString(),
+          inviter_name: data.inviterName.trim(),
+          inviter_email: inviterEmailNorm,
+          company_name: data.companyName.trim(),
+          test_type: 'basic',
+        });
+
+      if (insertError) throw insertError;
 
       toast.success('Invitation sent!', {
         description: `Email sent to ${data.candidateName}`,
