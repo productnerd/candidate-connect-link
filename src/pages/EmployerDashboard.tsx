@@ -192,15 +192,24 @@ export default function EmployerDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid sm:grid-cols-3 gap-6 mb-8">
           <Card className="card-elevated">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-base font-medium text-muted-foreground">Total Invitations</CardTitle>
+              <CardTitle className="text-base font-medium text-muted-foreground">Invitations Sent</CardTitle>
               <Send className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{stats.totalInvitations}</div>
-              <p className="text-xs text-muted-foreground mt-1">All time</p>
+              <div className="text-4xl font-bold font-serif">{stats.totalInvitations}/{stats.totalInvitations + stats.testsRemaining}</div>
+              <div className="mt-2">
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  className="h-auto py-1 px-3 text-xs"
+                  onClick={() => setShowBundleModal(true)}
+                >
+                  Purchase more
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -210,7 +219,7 @@ export default function EmployerDashboard() {
               <Clock className="h-4 w-4 text-warning" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-warning">{stats.pendingInvitations}</div>
+              <div className="text-4xl font-bold font-serif text-warning">{stats.pendingInvitations}</div>
               <p className="text-xs text-muted-foreground mt-1">Awaiting completion</p>
             </CardContent>
           </Card>
@@ -221,28 +230,8 @@ export default function EmployerDashboard() {
               <CheckCircle className="h-4 w-4 text-success" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-success">{stats.completedTests}</div>
+              <div className="text-4xl font-bold font-serif text-success">{stats.completedTests}</div>
               <p className="text-xs text-muted-foreground mt-1">Tests finished</p>
-            </CardContent>
-          </Card>
-
-          <Card className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-base font-medium text-muted-foreground">Tests Remaining</CardTitle>
-              <Package className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-primary">{stats.testsRemaining}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
-                  className="h-auto py-1 px-2 text-xs"
-                  onClick={() => setShowBundleModal(true)}
-                >
-                  Purchase more
-                </Button>
-              </p>
             </CardContent>
           </Card>
         </div>
@@ -288,7 +277,7 @@ export default function EmployerDashboard() {
                     const isCompleted = invitation.status === 'completed';
                     const result = invitation.result;
                     const questionCount = invitation.test_library?.question_count || 50;
-                    const scorePercent = result ? Math.round((result.score / questionCount) * 100) : null;
+                    const scorePercent = result ? Math.min(100, Math.round((result.score / questionCount) * 100)) : null;
                     const resultsUrl = invitation.session 
                       ? `/invite/${invitation.invitation_token}/results/${invitation.session.id}`
                       : null;
@@ -308,8 +297,8 @@ export default function EmployerDashboard() {
                           {isCompleted && result ? (
                             <>
                               <div className="text-right">
-                                <p className="font-bold text-sm">{scorePercent}%</p>
-                                <p className="text-xs text-muted-foreground">{result.score}/{questionCount}</p>
+                                <p className="font-bold font-serif text-sm">{scorePercent}%</p>
+                                <p className="text-xs text-muted-foreground">{Math.min(result.score, questionCount)}/{questionCount}</p>
                               </div>
                               {resultsUrl && (
                                 <Button variant="ghost" size="sm" asChild>
