@@ -46,6 +46,9 @@ const sendTestSchema = z.object({
   candidateEmail: z.string().email('Please enter a valid candidate email').refine(noPlusEmail, 'Email addresses with "+" are not allowed'),
   candidateName: z.string().min(2, 'Candidate name must be at least 2 characters'),
   testId: z.string().min(1, 'Please select a test'),
+}).refine((data) => data.inviterEmail.toLowerCase().trim() !== data.candidateEmail.toLowerCase().trim(), {
+  message: 'Candidate email cannot be the same as your email',
+  path: ['candidateEmail'],
 });
 
 type SendTestFormData = z.infer<typeof sendTestSchema>;
@@ -231,42 +234,97 @@ export default function SendTest() {
 
   const handleSubmit = async (data: SendTestFormData) => {
     setSending(true);
+    const inviterEmailNorm = data.inviterEmail.toLowerCase().trim();
+    const candidateEmailNorm = data.candidateEmail.toLowerCase().trim();
 
     try {
+      // --- Pre-flight limit checks BEFORE inserting anything ---
+
+      // 1. Same email check (redundant with zod but belt-and-suspenders)
+      if (inviterEmailNorm === candidateEmailNorm) {
+        toast.error('Candidate email cannot be the same as your email');
+        setSending(false);
+        return;
+      }
+
+      // 2. Check daily limit (3/day)
+      const { data: canSendDaily, error: dailyErr } = await supabase.rpc('check_sender_daily_limit', {
+        sender_email: inviterEmailNorm,
+      });
+      if (dailyErr) throw dailyErr;
+      if (!canSendDaily) {
+        toast.error('Daily limit reached (3 tests per day). Please try again tomorrow.');
+        setSending(false);
+        return;
+      }
+
+      // 3. Check total sender limit (10 total)
+      const { data: canSendTotal, error: totalErr } = await supabase.rpc('check_sender_total_limit', {
+        sender_email: inviterEmailNorm,
+      });
+      if (totalErr) throw totalErr;
+      if (!canSendTotal) {
+        toast.error('You have reached the maximum number of free invitations (10). Please purchase a bundle to continue.');
+        setSending(false);
+        return;
+      }
+
+      // 4. Check domain limit
+      const { data: domainOk, error: domainErr } = await supabase.rpc('check_domain_invite_limit', {
+        sender_email: inviterEmailNorm,
+      });
+      if (domainErr) throw domainErr;
+      if (!domainOk) {
+        toast.error('Your organization has reached the free invite limit (10). Please purchase a bundle to continue.');
+        setSending(false);
+        return;
+      }
+
+      // 5. Check candidate cooldown (30 days)
+      const { data: noCooldown, error: cooldownErr } = await supabase.rpc('check_candidate_cooldown', {
+        sender_email: inviterEmailNorm,
+        recipient_email: candidateEmailNorm,
+      });
+      if (cooldownErr) throw cooldownErr;
+      if (!noCooldown) {
+        toast.error('This candidate was already invited recently. Please wait 30 days before sending another invitation.');
+        setSending(false);
+        return;
+      }
+
+      // --- All checks passed, now insert + send email ---
       const token = generateToken();
       const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7); // 7 day expiry for basic tests
-
+      expiresAt.setDate(expiresAt.getDate() + 7);
       const selectedTestData = tests.find(t => t.id === data.testId);
 
-      // Create invitation (anonymous - no organization_id, no invited_by)
       const { error: insertError } = await supabase
         .from('test_invitations')
         .insert({
           organization_id: null,
           test_id: data.testId,
-          candidate_email: data.candidateEmail.toLowerCase().trim(),
+          candidate_email: candidateEmailNorm,
           candidate_name: data.candidateName.trim(),
           invited_by: null,
           invitation_token: token,
           expires_at: expiresAt.toISOString(),
           inviter_name: data.inviterName.trim(),
-          inviter_email: data.inviterEmail.toLowerCase().trim(),
+          inviter_email: inviterEmailNorm,
           company_name: data.companyName.trim(),
           test_type: 'basic',
         });
 
       if (insertError) throw insertError;
 
-      // Send email via public edge function
+      // Send email via edge function
       try {
         const { error: emailError } = await supabase.functions.invoke('send-basic-test-invitation', {
           body: {
-            candidateEmail: data.candidateEmail.toLowerCase().trim(),
+            candidateEmail: candidateEmailNorm,
             candidateName: data.candidateName.trim(),
             testName: selectedTestData?.name || 'Assessment',
             inviterName: data.inviterName.trim(),
-            inviterEmail: data.inviterEmail.toLowerCase().trim(),
+            inviterEmail: inviterEmailNorm,
             companyName: data.companyName.trim(),
             invitationToken: token,
             expiresAt: expiresAt.toISOString(),
@@ -287,7 +345,6 @@ export default function SendTest() {
         toast.warning('Invitation created, but email could not be sent. Please share the link manually.');
       }
 
-      // Show the invitation link
       setCreatedInvitation({ token, name: data.candidateName });
     } catch (error: any) {
       console.error('Error creating invitation:', error);
