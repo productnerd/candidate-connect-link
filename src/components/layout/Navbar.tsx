@@ -2,7 +2,8 @@ import * as React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { Brain, LogOut, User, LayoutDashboard, ArrowRight } from 'lucide-react';
+import { Brain, LogOut, User, LayoutDashboard, ArrowRight, ArrowLeftRight } from 'lucide-react';
+import { useDashboardView } from '@/hooks/useDashboardView';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +17,7 @@ export const Navbar = React.forwardRef<HTMLElement, Record<string, never>>((_, r
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const dashboardView = useDashboardView();
 
   // Determine if we're on the candidate landing page
   const isCandidateLanding = location.pathname === '/candidate';
@@ -124,6 +126,15 @@ export const Navbar = React.forwardRef<HTMLElement, Record<string, never>>((_, r
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         Dashboard
                       </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {dashboardView?.hasBothRoles && isDashboard && (
+                    <DropdownMenuItem
+                      onClick={() => dashboardView.setActiveView(v => v === 'employer' ? 'candidate' : 'employer')}
+                      className="cursor-pointer rounded-lg"
+                    >
+                      <ArrowLeftRight className="mr-2 h-4 w-4" />
+                      Switch to {dashboardView.activeView === 'employer' ? 'Candidate' : 'Business'} View
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem asChild>

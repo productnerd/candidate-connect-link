@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import { DashboardViewContext } from '@/hooks/useDashboardView';
 import EmployerDashboard from './EmployerDashboard';
 import CandidateDashboard from './CandidateDashboard';
 
@@ -57,9 +58,9 @@ export default function Dashboard() {
     ? activeView === 'employer' 
     : (profile.role === 'employer' || profile.role === 'admin');
 
-  const roleToggle = hasBothRoles ? { activeView, setActiveView } : undefined;
-
-  return showEmployerDashboard 
-    ? <EmployerDashboard roleToggle={roleToggle} /> 
-    : <CandidateDashboard roleToggle={roleToggle} />;
+  return (
+    <DashboardViewContext.Provider value={{ activeView, setActiveView, hasBothRoles }}>
+      {showEmployerDashboard ? <EmployerDashboard /> : <CandidateDashboard />}
+    </DashboardViewContext.Provider>
+  );
 }
