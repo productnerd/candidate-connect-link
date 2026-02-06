@@ -62,6 +62,7 @@ export default function CandidateDashboard() {
   const [hasPaidAccess, setHasPaidAccess] = useState(false);
   const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [chartMode, setChartMode] = useState<'mock' | 'learning'>('mock');
 
   useEffect(() => {
     if (user) {
@@ -208,20 +209,24 @@ export default function CandidateDashboard() {
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         fullDate: date.toISOString().split('T')[0],
         score: null as number | null,
+        correct: null as number | null,
+        total: null as number | null,
       });
     }
     return days;
   };
 
-  // Map test history to the 10-day chart
+  // Map test history to the 10-day chart, filtered by chartMode
   const chartData = (() => {
     const days = getLast10Days();
-    testHistory.forEach(entry => {
+    const filteredHistory = testHistory.filter(entry => entry.test_type === chartMode);
+    filteredHistory.forEach(entry => {
       const entryDate = new Date(entry.completed_at).toISOString().split('T')[0];
       const dayIndex = days.findIndex(d => d.fullDate === entryDate);
       if (dayIndex !== -1) {
-        // Use the latest score for that day (or average if needed)
         days[dayIndex].score = Math.round((entry.score / entry.total_questions) * 100);
+        days[dayIndex].correct = entry.score;
+        days[dayIndex].total = entry.total_questions;
       }
     });
     return days;
@@ -320,11 +325,39 @@ export default function CandidateDashboard() {
           {/* Score Chart */}
           <Card className="card-elevated md:col-span-2">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                Score Over Time
-              </CardTitle>
-              <CardDescription>Score trends across your practice sessions</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    Score Over Time
+                  </CardTitle>
+                  <CardDescription>Score trends across your practice sessions</CardDescription>
+                </div>
+                <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
+                  <button
+                    onClick={() => setChartMode('mock')}
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      chartMode === 'mock'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Zap className="h-3 w-3 inline mr-1" />
+                    Mock
+                  </button>
+                  <button
+                    onClick={() => setChartMode('learning')}
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      chartMode === 'learning'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <BookOpen className="h-3 w-3 inline mr-1" />
+                    Learning
+                  </button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="h-64">
@@ -362,7 +395,13 @@ export default function CandidateDashboard() {
                         borderRadius: '8px',
                       }}
                       labelStyle={{ color: 'hsl(var(--foreground))' }}
-                      formatter={(value: number) => [`${value}%`, 'Score']}
+                      formatter={(value: number, _name: string, props: any) => {
+                        const { payload } = props;
+                        if (payload.correct !== null && payload.total !== null) {
+                          return [`${value}% (${payload.correct}/${payload.total})`, 'Score'];
+                        }
+                        return [`${value}%`, 'Score'];
+                      }}
                     />
                     <Area 
                       type="monotone" 
@@ -595,61 +634,6 @@ export default function CandidateDashboard() {
           </div>
         </TooltipProvider>
 
-        {/* Recent Tests */}
-        {testHistory.length > 0 && (
-          <Card className="card-elevated">
-            <CardHeader>
-              <CardTitle>Recent Practice Sessions</CardTitle>
-              <CardDescription>Your latest test attempts</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {testHistory.slice(0, 5).map((entry) => (
-                  <div 
-                    key={entry.id} 
-                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-full ${
-                        entry.test_type === 'mock' 
-                          ? 'bg-primary/10' 
-                          : 'bg-primary/10'
-                      }`}>
-                        {entry.test_type === 'mock' ? (
-                          <Zap className="h-4 w-4 text-primary" />
-                        ) : (
-                          <BookOpen className="h-4 w-4 text-primary" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium capitalize">
-                          {entry.test_type === 'mock' ? 'Mock Test' : 'Learning Mode Test'}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(entry.completed_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className={`font-bold ${
-                        (entry.score / entry.total_questions) >= 0.8 
-                          ? 'text-success' 
-                          : (entry.score / entry.total_questions) >= 0.6 
-                            ? 'text-warning' 
-                            : 'text-destructive'
-                      }`}>
-                        {Math.round((entry.score / entry.total_questions) * 100)}%
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {entry.score}/{entry.total_questions}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </main>
 
       {/* Checkout Dialog */}
