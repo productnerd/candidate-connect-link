@@ -358,29 +358,12 @@ export default function SendTest() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left side - Background Image with Email Preview */}
+      {/* Left side - Background Image */}
       <div 
         className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${authBg})` }}
       >
-        {/* Overlay for readability */}
         <div className="absolute inset-0 bg-foreground/70" />
-        
-        {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center p-12 w-full">
-          <div className="text-center mb-8">
-            <p className="text-primary-foreground/80 text-sm uppercase tracking-wider mb-2">Email Preview</p>
-            <h2 className="text-2xl font-bold text-primary-foreground">What your candidate will receive</h2>
-          </div>
-          
-          {/* Live Email Preview */}
-          <EmailPreview
-            inviterName={watchedValues.inviterName}
-            companyName={watchedValues.companyName}
-            candidateName={watchedValues.candidateName}
-            testName={selectedTest?.name || ''}
-          />
-        </div>
       </div>
 
       {/* Right side - Form */}
@@ -388,10 +371,6 @@ export default function SendTest() {
         <div className="w-full max-w-md">
           {/* Header */}
           <div className="mb-8 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-4">
-              <Sparkles className="h-4 w-4" />
-              Free to use • No account required
-            </div>
             <h1 className="text-3xl font-bold mb-2">Send a Cognitive Assessment</h1>
             <p className="text-muted-foreground">
               Results will be emailed to you.
