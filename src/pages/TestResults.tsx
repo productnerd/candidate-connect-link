@@ -341,18 +341,8 @@ export default function TestResults() {
             </Card>
           </div>
 
-          {/* Hiring Recommendation */}
-          <Card className="card-elevated border-l-4 border-l-primary">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-3">
-                <Trophy className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-                <div>
-                  <p className="font-semibold text-sm mb-1">Assessment Summary</p>
-                  <p className="text-sm text-muted-foreground">{getRecommendation(percentage)}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+
+
 
           {/* Category Breakdown */}
           {Object.keys(categoryScores).length > 0 && (
