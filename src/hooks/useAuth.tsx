@@ -11,10 +11,13 @@ interface Profile {
   avatar_url: string | null;
 }
 
+type UserRole = 'employer' | 'candidate' | 'admin';
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
+  roles: UserRole[];
   loading: boolean;
   signInWithMagicLink: (email: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, metadata: { full_name: string; role: 'employer' | 'candidate'; organization_name?: string }) => Promise<{ error: Error | null }>;
@@ -29,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [roles, setRoles] = useState<UserRole[]>([]);
   const [authLoading, setAuthLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
 
@@ -36,19 +40,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfileLoading(true);
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
+      // Fetch profile and roles in parallel
+      const [profileResult, rolesResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle(),
+        supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+      ]);
 
-      if (error) {
-        console.error('Error fetching profile:', error);
+      if (profileResult.error) {
+        console.error('Error fetching profile:', profileResult.error);
         setProfile(null);
-        return;
+      } else {
+        setProfile((profileResult.data as Profile) ?? null);
       }
 
-      setProfile((data as Profile) ?? null);
+      if (rolesResult.error) {
+        console.error('Error fetching roles:', rolesResult.error);
+        setRoles([]);
+      } else {
+        setRoles((rolesResult.data?.map(r => r.role as UserRole)) ?? []);
+      }
     } finally {
       setProfileLoading(false);
     }
@@ -68,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, 0);
         } else {
           setProfile(null);
+          setRoles([]);
         }
         setAuthLoading(false);
       }
@@ -123,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setProfile(null);
+    setRoles([]);
     setProfileLoading(false);
   };
 
@@ -145,6 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       session,
       profile,
+      roles,
       loading: authLoading || profileLoading,
       signInWithMagicLink,
       signUp,
