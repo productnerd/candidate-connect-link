@@ -198,6 +198,10 @@ export default function CandidateDashboard() {
     return days;
   };
 
+  const hasMockTests = testHistory.some(e => e.test_type === 'mock');
+  const hasLearningTests = testHistory.some(e => e.test_type === 'learning');
+  const showToggle = hasMockTests && hasLearningTests;
+
   // Map test history to the 10-day chart, filtered by chartMode
   const chartData = (() => {
     const days = getLast10Days();
@@ -315,6 +319,7 @@ export default function CandidateDashboard() {
                   </CardTitle>
                   <CardDescription>Score trends across your practice sessions</CardDescription>
                 </div>
+                {showToggle && (
                 <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
                   <button
                     onClick={() => setChartMode('mock')}
@@ -339,6 +344,7 @@ export default function CandidateDashboard() {
                     Learning
                   </button>
                 </div>
+                )}
               </div>
             </CardHeader>
             <CardContent>
