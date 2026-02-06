@@ -53,44 +53,38 @@ export default function Dashboard() {
     );
   }
 
-  const RoleToggle = () => {
-    if (!hasBothRoles) return null;
-    
-    return (
-      <div className="flex justify-center py-4 bg-muted/30 border-b">
-        <div className="flex items-center glass-card p-1">
-          <button
-            onClick={() => setActiveView('employer')}
-            className={`px-4 py-2 rounded-xl text-[10px] font-medium uppercase tracking-wider transition-all duration-300 ${
-              activeView === 'employer'
-                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                : 'text-muted-foreground hover:text-foreground hover:bg-primary/10'
-            }`}
-          >
-            Business
-          </button>
-          <button
-            onClick={() => setActiveView('candidate')}
-            className={`px-4 py-2 rounded-xl text-[10px] font-medium uppercase tracking-wider transition-all duration-300 ${
-              activeView === 'candidate'
-                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                : 'text-muted-foreground hover:text-foreground hover:bg-primary/10'
-            }`}
-          >
-            Candidate
-          </button>
-        </div>
-      </div>
-    );
-  };
-
   const showEmployerDashboard = hasBothRoles 
     ? activeView === 'employer' 
     : (profile.role === 'employer' || profile.role === 'admin');
 
   return (
     <>
-      <RoleToggle />
+      {hasBothRoles && (
+        <div className="flex justify-center py-4 bg-muted/30 border-b">
+          <div className="flex items-center glass-card p-1" style={{ transform: 'none' }}>
+            <button
+              onClick={() => setActiveView('employer')}
+              className={`px-4 py-2 rounded-xl text-[10px] font-medium uppercase tracking-wider transition-all duration-300 ${
+                activeView === 'employer'
+                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-primary/10'
+              }`}
+            >
+              Business
+            </button>
+            <button
+              onClick={() => setActiveView('candidate')}
+              className={`px-4 py-2 rounded-xl text-[10px] font-medium uppercase tracking-wider transition-all duration-300 ${
+                activeView === 'candidate'
+                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-primary/10'
+              }`}
+            >
+              Candidate
+            </button>
+          </div>
+        </div>
+      )}
       {showEmployerDashboard ? <EmployerDashboard /> : <CandidateDashboard />}
     </>
   );

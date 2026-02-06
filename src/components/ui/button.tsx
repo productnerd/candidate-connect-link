@@ -25,10 +25,10 @@ const buttonVariants = cva(
           "shadow-[0_4px_16px_-4px_hsl(25_30%_10%/0.08),inset_0_2px_4px_0_hsl(38_25%_96%/0.6),inset_0_-1px_2px_0_hsl(25_30%_10%/0.02)] " +
           "hover:border-primary/40 hover:shadow-[0_8px_24px_-4px_hsl(25_30%_10%/0.12),inset_0_2px_4px_0_hsl(38_25%_96%/0.8)] hover:-translate-y-0.5",
         secondary: 
-          "relative bg-background/40 backdrop-blur-xl text-background/90 " +
-          "border border-primary-foreground/20 " +
+          "relative bg-secondary backdrop-blur-xl text-secondary-foreground " +
+          "border border-border/60 " +
           "shadow-[0_4px_16px_-4px_hsl(25_30%_10%/0.1),inset_0_1px_2px_0_hsl(38_25%_96%/0.4)] " +
-          "hover:bg-background/50 hover:border-primary-foreground/25 hover:-translate-y-0.5",
+          "hover:bg-secondary/80 hover:border-border hover:-translate-y-0.5",
         tertiary:
           "relative bg-background/20 backdrop-blur-md " +
           "border border-foreground/20 " +
