@@ -385,17 +385,19 @@ export default function SendTest() {
       {/* Right side - Form */}
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 bg-background overflow-y-auto">
         <div className="w-full max-w-md">
-          {/* Header */}
-          <div className="mb-8 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-4">
-              <Sparkles className="h-4 w-4" />
-              Free to use • No account required
+          {/* Header - hidden on success */}
+          {!createdInvitation && (
+            <div className="mb-8 text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-4">
+                <Sparkles className="h-4 w-4" />
+                Free to use • No account required
+              </div>
+              <h1 className="text-3xl font-bold mb-2">Send a Cognitive Assessment</h1>
+              <p className="text-muted-foreground">
+                Results will be emailed to you.
+              </p>
             </div>
-            <h1 className="text-3xl font-bold mb-2">Send a Cognitive Assessment</h1>
-            <p className="text-muted-foreground">
-              Results will be emailed to you.
-            </p>
-          </div>
+          )}
 
           {/* Success State */}
           {createdInvitation ? (
@@ -405,27 +407,26 @@ export default function SendTest() {
                   <CheckCircle className="h-5 w-5" />
                   Invitation Sent!
                 </CardTitle>
-                <CardDescription>
-                  We've emailed {createdInvitation.name} with a link to take the test.
-                  You'll receive the results once they complete it.
+                <CardDescription className="space-y-1">
+                  <p>We've emailed {createdInvitation.name} with a link to take the test.</p>
+                  <p>You'll receive the results via email once they do.</p>
+                  <p>The link will expire in a week.</p>
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-4 pt-2">
+              <CardContent className="space-y-3">
                   <Button 
                     variant="outline" 
                     onClick={() => {
                       setCreatedInvitation(null);
                       form.reset();
                     }} 
-                    className="flex-1"
+                    className="w-full"
                   >
                     Send Another Test
                   </Button>
-                  <Button variant="default" onClick={() => navigate('/employer')} className="flex-1">
-                    Back to Home
+                  <Button variant="default" onClick={() => navigate('/dashboard')} className="w-full">
+                    Dashboard
                   </Button>
-                </div>
               </CardContent>
             </Card>
           ) : (
