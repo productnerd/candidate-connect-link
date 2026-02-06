@@ -107,8 +107,8 @@ export function CandidateBundleModal({ open, onOpenChange }: CandidateBundleModa
                   <Shield className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm">Priority Support</p>
-                  <p className="text-xs text-muted-foreground">Get help when you need it</p>
+                  <p className="font-medium text-sm">Two modes of practicing</p>
+                  <p className="text-xs text-muted-foreground">Mock Test or Learning Mode</p>
                 </div>
               </div>
             </div>
