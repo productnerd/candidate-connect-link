@@ -134,13 +134,13 @@ export default function EmployerDashboard() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
-        return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
+        return <Badge variant="secondary" className="text-[10px] uppercase tracking-wider"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
       case 'started':
-        return <Badge className="bg-warning text-warning-foreground"><Clock className="h-3 w-3 mr-1" />In Progress</Badge>;
+        return <Badge className="bg-warning text-warning-foreground text-[10px] uppercase tracking-wider"><Clock className="h-3 w-3 mr-1" />In Progress</Badge>;
       case 'expired':
-        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Expired</Badge>;
+        return <Badge variant="destructive" className="text-[10px] uppercase tracking-wider"><XCircle className="h-3 w-3 mr-1" />Expired</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="outline" className="text-[10px] uppercase tracking-wider">{status}</Badge>;
     }
   };
 
