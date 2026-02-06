@@ -144,6 +144,27 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Check domain invite limit (10 total per domain for unpaid users)
+    const { data: domainCanSend, error: domainError } = await supabase.rpc('check_domain_invite_limit', {
+      sender_email: inviterEmail.toLowerCase().trim()
+    });
+
+    if (domainError) {
+      console.error("Error checking domain limit:", domainError);
+      return new Response(
+        JSON.stringify({ error: "Unable to verify domain limits" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!domainCanSend) {
+      console.log("Domain invite limit reached:", inviterEmail);
+      return new Response(
+        JSON.stringify({ error: "DOMAIN_LIMIT_REACHED", message: "Your organization has reached the free invite limit (10). Please purchase a bundle to continue sending assessments." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Check candidate cooldown (30 days between invites to same candidate from same sender)
     const { data: noCooldown, error: cooldownError } = await supabase.rpc('check_candidate_cooldown', {
       sender_email: inviterEmail.toLowerCase().trim(),
