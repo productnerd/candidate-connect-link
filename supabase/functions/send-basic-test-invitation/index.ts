@@ -40,6 +40,11 @@ function validateInput(data: BasicInvitationEmailRequest): string | null {
   if (data.candidateEmail.includes('+') || data.inviterEmail.includes('+')) {
     return 'Email addresses with "+" are not allowed';
   }
+
+  // Block same email for sender and candidate
+  if (data.candidateEmail.toLowerCase().trim() === data.inviterEmail.toLowerCase().trim()) {
+    return 'Candidate email cannot be the same as your email';
+  }
   
   // Length validation for names (2-100 characters)
   if (!data.candidateName || data.candidateName.length < 2 || data.candidateName.length > 100) {
