@@ -398,7 +398,7 @@ export default function SendTest() {
             </p>
           </div>
 
-          {/* Success State - Show Link */}
+          {/* Success State */}
           {createdInvitation ? (
             <Card className="card-elevated border-success/50">
               <CardHeader>
@@ -408,43 +408,11 @@ export default function SendTest() {
                 </CardTitle>
                 <CardDescription>
                   We've emailed {createdInvitation.name} with a link to take the test.
-                  You can also share this link directly:
+                  You'll receive the results once they complete it.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Invitation Link</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={`${window.location.origin}/test/${createdInvitation.token}`}
-                      readOnly
-                      className="font-mono text-sm"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/test/${createdInvitation.token}`);
-                        toast.success('Link copied to clipboard!');
-                      }}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
-                  <p className="flex items-center gap-2 mb-2">
-                    <LinkIcon className="h-4 w-4" />
-                    The candidate can use this link to take the test—no account required.
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
-                    You'll receive an email with the results once they complete it.
-                  </p>
-                </div>
-
-                <div className="flex gap-4 pt-4">
+                <div className="flex gap-4 pt-2">
                   <Button 
                     variant="outline" 
                     onClick={() => {
