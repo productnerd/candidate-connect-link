@@ -608,14 +608,14 @@ export default function SendTest() {
                       )}
                     </Button>
                     <p className="text-center text-sm text-muted-foreground">
-                      Want to see what candidates experience?{' '}
+                      Want to try the test?{' '}
                       <a 
                         href="/practice"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:underline font-medium"
                       >
-                        Try the test yourself
+                        Take one here
                       </a>
                     </p>
                   </div>
