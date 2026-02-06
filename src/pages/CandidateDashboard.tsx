@@ -1,7 +1,6 @@
-import { useState, useEffect, Dispatch, SetStateAction } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
-import { RoleToggleBar } from '@/components/RoleToggleBar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -54,14 +53,7 @@ interface TestHistoryEntry {
   category_scores: unknown;
 }
 
-interface CandidateDashboardProps {
-  roleToggle?: {
-    activeView: 'employer' | 'candidate';
-    setActiveView: Dispatch<SetStateAction<'employer' | 'candidate'>>;
-  };
-}
-
-export default function CandidateDashboard({ roleToggle }: CandidateDashboardProps) {
+export default function CandidateDashboard() {
   const { profile, user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [invitations, setInvitations] = useState<TestInvitation[]>([]);
@@ -280,8 +272,6 @@ export default function CandidateDashboard({ roleToggle }: CandidateDashboardPro
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      {roleToggle && <RoleToggleBar activeView={roleToggle.activeView} setActiveView={roleToggle.setActiveView} />}
-      
       <main className="container pt-24 pb-8">
         {/* Header with Pending Assessments */}
         <div className="mb-8 flex items-start justify-between">

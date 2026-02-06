@@ -1,6 +1,5 @@
-import { useState, useEffect, useMemo, Dispatch, SetStateAction } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
-import { RoleToggleBar } from '@/components/RoleToggleBar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -37,14 +36,7 @@ interface DashboardStats {
 
 const ITEMS_PER_PAGE = 5;
 
-interface EmployerDashboardProps {
-  roleToggle?: {
-    activeView: 'employer' | 'candidate';
-    setActiveView: Dispatch<SetStateAction<'employer' | 'candidate'>>;
-  };
-}
-
-export default function EmployerDashboard({ roleToggle }: EmployerDashboardProps) {
+export default function EmployerDashboard() {
   const { profile } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
     totalInvitations: 0,
@@ -188,7 +180,6 @@ export default function EmployerDashboard({ roleToggle }: EmployerDashboardProps
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      {roleToggle && <RoleToggleBar activeView={roleToggle.activeView} setActiveView={roleToggle.setActiveView} />}
       <main className="container pt-24 pb-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
