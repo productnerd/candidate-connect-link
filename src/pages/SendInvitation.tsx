@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -22,7 +23,9 @@ import {
   Brain,
   Copy,
   CheckCircle,
-  Link as LinkIcon
+  Link as LinkIcon,
+  AlertTriangle,
+  ShoppingCart
 } from 'lucide-react';
 
 interface TestOption {
@@ -49,6 +52,9 @@ export default function SendInvitation() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [createdInvitation, setCreatedInvitation] = useState<{ token: string; name: string } | null>(null);
+  const [domainLimitReached, setDomainLimitReached] = useState(false);
+  const [hasPaidBundle, setHasPaidBundle] = useState<boolean | null>(null);
+  const [checkingAccess, setCheckingAccess] = useState(true);
 
   const form = useForm<InvitationFormData>({
     resolver: zodResolver(invitationSchema),
@@ -59,6 +65,49 @@ export default function SendInvitation() {
       expiresInDays: 7,
     },
   });
+
+  // Check if user has paid access or if domain limit is reached
+  const checkAccess = useCallback(async () => {
+    if (!profile) return;
+
+    setCheckingAccess(true);
+    try {
+      // Check if user has a paid bundle
+      if (profile.organization_id) {
+        const { data: bundles } = await supabase
+          .from('test_bundles')
+          .select('id')
+          .eq('organization_id', profile.organization_id)
+          .gt('tests_remaining', 0)
+          .limit(1);
+
+        if (bundles && bundles.length > 0) {
+          setHasPaidBundle(true);
+          setDomainLimitReached(false);
+          setCheckingAccess(false);
+          return;
+        }
+      }
+
+      // If no paid bundle, check domain limit
+      const { data, error } = await supabase.rpc('get_domain_invite_count', {
+        sender_email: profile.email.toLowerCase().trim()
+      });
+
+      if (!error) {
+        setDomainLimitReached(data >= 10);
+      }
+      setHasPaidBundle(false);
+    } catch (err) {
+      console.error('Error checking access:', err);
+    } finally {
+      setCheckingAccess(false);
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    checkAccess();
+  }, [checkAccess]);
 
   useEffect(() => {
     fetchTests();
@@ -175,6 +224,27 @@ export default function SendInvitation() {
           <p className="text-muted-foreground">Invite a candidate to complete an assessment</p>
         </div>
 
+        {/* Domain Limit Reached - Show upgrade prompt */}
+        {!checkingAccess && domainLimitReached && !hasPaidBundle && (
+          <Card className="card-elevated border-destructive/50 mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                Free Invite Limit Reached
+              </CardTitle>
+              <CardDescription>
+                Your organization has sent 10 free test invitations. To continue sending assessments, please purchase a bundle.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate('/dashboard')} className="w-full">
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Purchase Bundle
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Success State - Show Link */}
         {createdInvitation ? (
           <Card className="card-elevated border-success/50">
@@ -231,9 +301,21 @@ export default function SendInvitation() {
                   Go to Dashboard
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        ) : (
+              </CardContent>
+            </Card>
+          ) : !checkingAccess && domainLimitReached && !hasPaidBundle ? (
+            // Form is hidden when domain limit reached
+            null
+          ) : checkingAccess ? (
+            <Card className="card-elevated">
+              <CardContent className="py-12">
+                <div className="flex flex-col items-center justify-center gap-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  <p className="text-muted-foreground">Checking access...</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
         <Card className="card-elevated">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

@@ -575,9 +575,17 @@ export type Database = {
         Args: { recipient_email: string; sender_email: string }
         Returns: boolean
       }
+      check_domain_invite_limit: {
+        Args: { sender_email: string }
+        Returns: boolean
+      }
       check_sender_daily_limit: {
         Args: { sender_email: string }
         Returns: boolean
+      }
+      get_domain_invite_count: {
+        Args: { sender_email: string }
+        Returns: number
       }
       get_user_email: { Args: { _user_id: string }; Returns: string }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }

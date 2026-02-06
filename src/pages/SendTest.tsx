@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -21,7 +22,8 @@ import {
   Copy,
   CheckCircle,
   Link as LinkIcon,
-  Sparkles
+  Sparkles,
+  AlertTriangle
 } from 'lucide-react';
 import authBg from '@/assets/auth-bg.png';
 
@@ -127,6 +129,8 @@ export default function SendTest() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [createdInvitation, setCreatedInvitation] = useState<{ token: string; name: string } | null>(null);
+  const [domainLimitReached, setDomainLimitReached] = useState(false);
+  const [checkingDomainLimit, setCheckingDomainLimit] = useState(false);
 
   const form = useForm<SendTestFormData>({
     resolver: zodResolver(sendTestSchema),
@@ -143,6 +147,47 @@ export default function SendTest() {
   // Watch form values for live preview
   const watchedValues = form.watch();
   const selectedTest = tests.find(t => t.id === watchedValues.testId);
+
+  // Check domain invite limit when email changes
+  const checkDomainLimit = useCallback(async (email: string) => {
+    if (!email || !email.includes('@')) {
+      setDomainLimitReached(false);
+      return;
+    }
+
+    setCheckingDomainLimit(true);
+    try {
+      const { data, error } = await supabase.rpc('get_domain_invite_count', {
+        sender_email: email.toLowerCase().trim()
+      });
+
+      if (error) {
+        console.error('Error checking domain limit:', error);
+        return;
+      }
+
+      setDomainLimitReached(data >= 10);
+    } catch (err) {
+      console.error('Error checking domain limit:', err);
+    } finally {
+      setCheckingDomainLimit(false);
+    }
+  }, []);
+
+  // Debounce email check
+  useEffect(() => {
+    const email = watchedValues.inviterEmail;
+    if (!email) {
+      setDomainLimitReached(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      checkDomainLimit(email);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [watchedValues.inviterEmail, checkDomainLimit]);
 
   useEffect(() => {
     fetchTests();
@@ -392,14 +437,27 @@ export default function SendTest() {
                           id="inviterEmail"
                           type="email"
                           placeholder="you@company.com"
-                          className="pl-10"
+                          className={`pl-10 ${domainLimitReached ? 'border-destructive' : ''}`}
                           {...form.register('inviterEmail')}
                         />
                       </div>
                       {form.formState.errors.inviterEmail && (
                         <p className="text-sm text-destructive">{form.formState.errors.inviterEmail.message}</p>
                       )}
-                      <p className="text-xs text-muted-foreground">Results will be sent to this email</p>
+                      {!domainLimitReached && (
+                        <p className="text-xs text-muted-foreground">Results will be sent to this email</p>
+                      )}
+                      
+                      {/* Domain Limit Alert */}
+                      {domainLimitReached && (
+                        <Alert variant="destructive" className="mt-2">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertDescription>
+                            Your organization has reached the free invite limit (10 tests). 
+                            Please <a href="/auth?tab=signup&role=employer" className="font-medium underline">create an account</a> and purchase a bundle to continue.
+                          </AlertDescription>
+                        </Alert>
+                      )}
                     </div>
 
                     {/* Company Name */}
@@ -484,11 +542,26 @@ export default function SendTest() {
 
                   {/* Submit Button */}
                   <div className="space-y-4">
-                    <Button type="submit" variant="hero" disabled={sending} className="w-full">
-                      {sending ? (
+                    <Button 
+                      type="submit" 
+                      variant="hero" 
+                      disabled={sending || domainLimitReached || checkingDomainLimit} 
+                      className="w-full"
+                    >
+                      {checkingDomainLimit ? (
+                        <>
+                          <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                          Checking...
+                        </>
+                      ) : sending ? (
                         <>
                           <Loader2 className="mr-2 h-3 w-3 animate-spin" />
                           Sending...
+                        </>
+                      ) : domainLimitReached ? (
+                        <>
+                          <AlertTriangle className="mr-2 h-3 w-3" />
+                          Limit Reached
                         </>
                       ) : (
                         <>
