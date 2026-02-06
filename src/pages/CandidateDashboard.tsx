@@ -22,8 +22,7 @@ import {
   Brain,
   MessageSquare,
   Shapes,
-  ShoppingCart,
-  Lock
+  ShoppingCart
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -497,7 +496,7 @@ export default function CandidateDashboard() {
                   <UITooltip>
                     <TooltipTrigger asChild>
                       <Button className="w-full" asChild>
-                        <Link to="/candidate/practice">
+                        <Link to="/practice">
                           <Play className="h-4 w-4 mr-2" />
                           Take Practice Test
                         </Link>
@@ -575,6 +574,7 @@ export default function CandidateDashboard() {
                     <li>• Track your progress over time</li>
                   </ul>
                   <Button 
+                    variant="secondary"
                     className="w-full" 
                     onClick={() => setShowCheckoutDialog(true)}
                   >
@@ -586,32 +586,6 @@ export default function CandidateDashboard() {
             )}
           </div>
         </TooltipProvider>
-
-        {/* Premium Features Locked Banner (for free users) */}
-        {!hasPaidAccess && (
-          <Card className="card-elevated mb-8 border-dashed border-muted-foreground/30">
-            <CardContent className="py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Lock className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium text-sm">Premium features locked</p>
-                    <p className="text-xs text-muted-foreground">
-                      Purchase the Unlimited Bundle to access Mock Tests and Learning Mode
-                    </p>
-                  </div>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowCheckoutDialog(true)}
-                >
-                  Learn More
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Recent Tests */}
         {testHistory.length > 0 && (
