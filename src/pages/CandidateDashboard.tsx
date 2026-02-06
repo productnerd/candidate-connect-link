@@ -4,7 +4,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { CandidateBundleModal } from '@/components/CandidateBundleModal';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -61,7 +61,7 @@ export default function CandidateDashboard() {
   const [loading, setLoading] = useState(true);
   const [hasPaidAccess, setHasPaidAccess] = useState(false);
   const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  
   const [chartMode, setChartMode] = useState<'mock' | 'learning'>('mock');
 
   useEffect(() => {
@@ -158,25 +158,7 @@ export default function CandidateDashboard() {
     }
   };
 
-  const handlePurchaseBundle = async () => {
-    setCheckoutLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { bundle_type: 'candidate_unlimited' },
-      });
-
-      if (error) throw error;
-
-      if (data?.url) {
-        window.location.href = data.url;
-      }
-    } catch (error) {
-      console.error('Checkout error:', error);
-      toast.error('Failed to start checkout. Please try again.');
-    } finally {
-      setCheckoutLoading(false);
-    }
-  };
+  // handlePurchaseBundle removed - now handled by CandidateBundleModal
 
   const getStatusBadge = (status: string, expiresAt: string) => {
     const isExpired = new Date(expiresAt) < new Date();
@@ -621,7 +603,7 @@ export default function CandidateDashboard() {
                     <li>• Track your progress over time</li>
                   </ul>
                   <Button 
-                    variant="secondary"
+                    variant="outline"
                     className="w-full" 
                     onClick={() => setShowCheckoutDialog(true)}
                   >
@@ -636,60 +618,7 @@ export default function CandidateDashboard() {
 
       </main>
 
-      {/* Checkout Dialog */}
-      <Dialog open={showCheckoutDialog} onOpenChange={setShowCheckoutDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Unlock Unlimited Practice</DialogTitle>
-            <DialogDescription>
-              Get full access to all premium features
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-primary" />
-                <span className="text-sm">Unlimited mock tests with timer</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-primary" />
-                <span className="text-sm">Learning mode with explanations</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-primary" />
-                <span className="text-sm">Progress tracking & analytics</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-primary" />
-                <span className="text-sm">100s of premium questions</span>
-              </div>
-            </div>
-            <div className="border-t pt-4">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-lg font-semibold">Unlimited Bundle</span>
-                <span className="text-2xl font-bold">€14</span>
-              </div>
-              <Button 
-                className="w-full" 
-                onClick={handlePurchaseBundle}
-                disabled={checkoutLoading}
-              >
-                {checkoutLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  <>
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    Purchase Now
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <CandidateBundleModal open={showCheckoutDialog} onOpenChange={setShowCheckoutDialog} />
     </div>
   );
 }
