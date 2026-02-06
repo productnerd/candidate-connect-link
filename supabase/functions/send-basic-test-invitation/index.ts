@@ -357,26 +357,96 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Inviter confirmation email sent:", inviterEmailResponse);
 
-    // Auto-create candidate account silently
+    // Initialize admin client for account creation
     const adminClient = createAdminClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Check if user already exists
+    // Get list of existing users
     const { data: existingUsers } = await adminClient.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(
+
+    // Auto-create EMPLOYER account silently (if this is their first invite)
+    const existingEmployer = existingUsers?.users?.find(
+      u => u.email?.toLowerCase() === inviterEmail.toLowerCase().trim()
+    );
+
+    if (!existingEmployer) {
+      // Create new employer user with a random password (they'll use magic link to login)
+      const randomPassword = crypto.randomUUID() + crypto.randomUUID();
+      const { data: newEmployer, error: createEmployerError } = await adminClient.auth.admin.createUser({
+        email: inviterEmail.toLowerCase().trim(),
+        password: randomPassword,
+        email_confirm: true,
+        user_metadata: {
+          full_name: inviterName.trim(),
+          role: 'employer',
+          company_name: companyName.trim(),
+        },
+      });
+
+      if (createEmployerError) {
+        console.error("Error creating employer account:", createEmployerError);
+      } else {
+        console.log("Created employer account for:", inviterEmail);
+
+        if (newEmployer?.user) {
+          const { error: profileError } = await adminClient
+            .from('profiles')
+            .insert({
+              id: newEmployer.user.id,
+              email: inviterEmail.toLowerCase().trim(),
+              full_name: inviterName.trim(),
+              role: 'employer',
+            });
+
+          if (profileError) {
+            console.error("Error creating employer profile:", profileError);
+          }
+
+          const { error: roleError } = await adminClient
+            .from('user_roles')
+            .insert({
+              user_id: newEmployer.user.id,
+              role: 'employer',
+            });
+
+          if (roleError) {
+            console.error("Error creating employer role:", roleError);
+          }
+        }
+      }
+    } else {
+      console.log("Employer account already exists:", inviterEmail);
+      
+      // Check if they have the employer role, if not add it
+      const { data: existingRoles } = await adminClient
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', existingEmployer.id);
+      
+      const hasEmployerRole = existingRoles?.some(r => r.role === 'employer');
+      if (!hasEmployerRole) {
+        await adminClient.from('user_roles').insert({
+          user_id: existingEmployer.id,
+          role: 'employer',
+        });
+        console.log("Added employer role to existing user:", inviterEmail);
+      }
+    }
+
+    // Auto-create CANDIDATE account silently
+    const existingCandidate = existingUsers?.users?.find(
       u => u.email?.toLowerCase() === candidateEmail.toLowerCase().trim()
     );
 
-    if (!existingUser) {
-      // Create new user with a random password (they'll use magic link to login)
+    if (!existingCandidate) {
       const randomPassword = crypto.randomUUID() + crypto.randomUUID();
       const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
         email: candidateEmail.toLowerCase().trim(),
         password: randomPassword,
-        email_confirm: true, // Auto-confirm so they can login via magic link
+        email_confirm: true,
         user_metadata: {
           full_name: candidateName.trim(),
           invited_by_employer: true,
@@ -385,11 +455,9 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (createError) {
         console.error("Error creating candidate account:", createError);
-        // Don't fail the invitation - the candidate can still use the anonymous flow
       } else {
         console.log("Created candidate account for:", candidateEmail);
 
-        // Create profile and role records for the new user
         if (newUser?.user) {
           const { error: profileError } = await adminClient
             .from('profiles')
@@ -401,7 +469,7 @@ const handler = async (req: Request): Promise<Response> => {
             });
 
           if (profileError) {
-            console.error("Error creating profile:", profileError);
+            console.error("Error creating candidate profile:", profileError);
           }
 
           const { error: roleError } = await adminClient
@@ -412,7 +480,7 @@ const handler = async (req: Request): Promise<Response> => {
             });
 
           if (roleError) {
-            console.error("Error creating role:", roleError);
+            console.error("Error creating candidate role:", roleError);
           }
         }
       }
