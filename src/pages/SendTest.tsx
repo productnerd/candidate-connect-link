@@ -35,13 +35,15 @@ interface TestOption {
   category: string;
 }
 
+const noPlusEmail = (val: string) => !val.includes('+');
+
 const sendTestSchema = z.object({
   // Inviter info
   inviterName: z.string().min(2, 'Your name must be at least 2 characters'),
-  inviterEmail: z.string().email('Please enter a valid email address'),
+  inviterEmail: z.string().email('Please enter a valid email address').refine(noPlusEmail, 'Email addresses with "+" are not allowed'),
   companyName: z.string().min(2, 'Company name must be at least 2 characters'),
   // Candidate info
-  candidateEmail: z.string().email('Please enter a valid candidate email'),
+  candidateEmail: z.string().email('Please enter a valid candidate email').refine(noPlusEmail, 'Email addresses with "+" are not allowed'),
   candidateName: z.string().min(2, 'Candidate name must be at least 2 characters'),
   testId: z.string().min(1, 'Please select a test'),
 });

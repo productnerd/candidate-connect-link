@@ -583,6 +583,10 @@ export type Database = {
         Args: { sender_email: string }
         Returns: boolean
       }
+      check_sender_total_limit: {
+        Args: { sender_email: string }
+        Returns: boolean
+      }
       get_domain_invite_count: {
         Args: { sender_email: string }
         Returns: number

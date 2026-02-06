@@ -35,6 +35,11 @@ function validateInput(data: BasicInvitationEmailRequest): string | null {
   if (!data.inviterEmail || !emailRegex.test(data.inviterEmail)) {
     return 'Invalid inviter email format';
   }
+
+  // Block "+" in emails
+  if (data.candidateEmail.includes('+') || data.inviterEmail.includes('+')) {
+    return 'Email addresses with "+" are not allowed';
+  }
   
   // Length validation for names (2-100 characters)
   if (!data.candidateName || data.candidateName.length < 2 || data.candidateName.length > 100) {
@@ -140,6 +145,27 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("Sender daily limit reached:", inviterEmail);
       return new Response(
         JSON.stringify({ error: "Daily limit reached (3 tests per day). Please try again tomorrow." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check per-sender total limit (10 invites per email, regardless of domain)
+    const { data: senderCanSend, error: senderTotalError } = await supabase.rpc('check_sender_total_limit', {
+      sender_email: inviterEmail.toLowerCase().trim()
+    });
+
+    if (senderTotalError) {
+      console.error("Error checking sender total limit:", senderTotalError);
+      return new Response(
+        JSON.stringify({ error: "Unable to verify sender limits" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!senderCanSend) {
+      console.log("Sender total limit reached:", inviterEmail);
+      return new Response(
+        JSON.stringify({ error: "You have reached the maximum number of free invitations (10). Please purchase a bundle to continue sending assessments." }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
