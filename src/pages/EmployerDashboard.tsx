@@ -189,7 +189,7 @@ export default function EmployerDashboard({ roleToggle }: EmployerDashboardProps
     <div className="min-h-screen bg-background">
       <Navbar />
       {roleToggle && <RoleToggleBar activeView={roleToggle.activeView} setActiveView={roleToggle.setActiveView} />}
-      <main className="container py-8">
+      <main className="container pt-24 pb-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
