@@ -50,6 +50,7 @@ export default function EmployerDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [organizationName, setOrganizationName] = useState<string | null>(null);
+  const [dailyInvitesSent, setDailyInvitesSent] = useState(0);
 
   useEffect(() => {
     if (profile?.organization_id) {
@@ -125,6 +126,12 @@ export default function EmployerDashboard() {
       const pending = enrichedInvitations.filter(i => i.status === 'pending').length;
       const completed = enrichedInvitations.filter(i => i.status === 'completed').length;
 
+      // Count today's invitations for daily limit display
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayInvites = enrichedInvitations.filter(i => new Date(i.created_at) >= today).length;
+      setDailyInvitesSent(todayInvites);
+
       setStats({
         totalInvitations: enrichedInvitations.length,
         pendingInvitations: pending,
@@ -191,28 +198,34 @@ export default function EmployerDashboard() {
       <Navbar />
       <main className="container pt-24 pb-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">{organizationName || 'Employer Dashboard'}</h1>
-            <p className="text-muted-foreground">Welcome back, {profile?.full_name || 'User'}!</p>
-          </div>
-          <Button variant="hero" asChild>
-            <Link to="/invite">
-              <Send className="h-4 w-4 mr-2" />
-              Send Invitation
-            </Link>
-          </Button>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">{organizationName || 'Employer Dashboard'}</h1>
+          <p className="text-muted-foreground">Welcome back, {profile?.full_name || 'User'}!</p>
         </div>
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="bg-muted/50">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="analytics">
-              <BarChart3 className="h-3 w-3 mr-1" />
-              Analytics
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex items-center justify-between">
+            <TabsList className="bg-muted/50">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="analytics">
+                <BarChart3 className="h-3 w-3 mr-1" />
+                Analytics
+              </TabsTrigger>
+            </TabsList>
+            <div className="flex flex-col items-end gap-1">
+              <Button variant="hero" asChild>
+                <Link to="/invite">
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Invitation
+                </Link>
+              </Button>
+              <div className="text-xs text-muted-foreground text-right">
+                <p>{Math.max(0, 3 - dailyInvitesSent)} tests left today</p>
+                <p>{stats.testsRemaining} tests left in total</p>
+              </div>
+            </div>
+          </div>
 
           <TabsContent value="overview" className="space-y-6">
             {/* Stats Grid */}
