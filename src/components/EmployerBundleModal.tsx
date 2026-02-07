@@ -12,7 +12,7 @@ interface EmployerBundleModalProps {
 
 const bundles = [
   {
-    type: 'starter',
+    type: 'employer_30',
     name: 'Starter',
     tests: 30,
     price: '€9',
@@ -20,7 +20,7 @@ const bundles = [
     popular: false,
   },
   {
-    type: 'professional',
+    type: 'employer_100',
     name: 'Professional',
     tests: 100,
     price: '€29',
@@ -28,7 +28,7 @@ const bundles = [
     popular: true,
   },
   {
-    type: 'enterprise',
+    type: 'employer_500',
     name: 'Enterprise',
     tests: 500,
     price: '€79',
