@@ -49,6 +49,7 @@ export default function EmployerDashboard() {
   const [showBundleModal, setShowBundleModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [organizationName, setOrganizationName] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile?.organization_id) {
@@ -62,6 +63,14 @@ export default function EmployerDashboard() {
     if (!profile?.organization_id) return;
 
     try {
+      // Fetch organization name
+      const { data: orgData } = await supabase
+        .from('organizations')
+        .select('name')
+        .eq('id', profile.organization_id)
+        .single();
+      
+      if (orgData?.name) setOrganizationName(orgData.name);
       // Fetch ALL invitations (not limited to 5)
       const { data: invitations, error: invError } = await supabase
         .from('test_invitations')
@@ -184,7 +193,7 @@ export default function EmployerDashboard() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Employer Dashboard</h1>
+            <h1 className="text-3xl font-bold">{organizationName || 'Employer Dashboard'}</h1>
             <p className="text-muted-foreground">Welcome back, {profile?.full_name || 'User'}!</p>
           </div>
           <Button variant="hero" asChild>
