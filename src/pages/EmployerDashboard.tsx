@@ -350,7 +350,12 @@ export default function EmployerDashboard() {
                         return (
                           <div 
                             key={invitation.id} 
-                            className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                            className={`flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors ${isCompleted && resultsUrl ? 'cursor-pointer' : ''}`}
+                            onClick={() => {
+                              if (isCompleted && resultsUrl) {
+                                window.open(resultsUrl, '_blank');
+                              }
+                            }}
                           >
                             <div className="flex-1 min-w-0">
                               <p className="font-medium truncate">{invitation.candidate_name || invitation.candidate_email}</p>
@@ -360,25 +365,15 @@ export default function EmployerDashboard() {
                             </div>
                             <div className="flex items-center gap-4">
                               {isCompleted && result ? (
-                                <>
-                                  <div className="flex items-center">
-                                    <p className={`font-bold font-display text-2xl ${
-                                      scorePercent! >= 90 ? 'text-emerald-500' :
-                                      scorePercent! >= 80 ? 'text-green-600' :
-                                      scorePercent! >= 70 ? 'text-lime-500' :
-                                      scorePercent! >= 40 ? 'text-orange-500' :
-                                      'text-orange-300'
-                                    }`}>{scorePercent}%</p>
-                                  </div>
-                                  {resultsUrl && (
-                                    <Button variant="ghost" size="sm" asChild>
-                                      <a href={resultsUrl} target="_blank" rel="noopener noreferrer">
-                                        View Results
-                                        <ExternalLink className="h-3 w-3 ml-1" />
-                                      </a>
-                                    </Button>
-                                  )}
-                                </>
+                                <div className="flex items-center">
+                                  <p className={`font-bold font-display text-2xl ${
+                                    scorePercent! >= 90 ? 'text-emerald-500' :
+                                    scorePercent! >= 80 ? 'text-green-600' :
+                                    scorePercent! >= 70 ? 'text-lime-500' :
+                                    scorePercent! >= 40 ? 'text-orange-500' :
+                                    'text-orange-300'
+                                  }`}>{scorePercent}%</p>
+                                </div>
                               ) : (
                                 getStatusBadge(invitation.status)
                               )}
