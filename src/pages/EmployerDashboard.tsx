@@ -261,8 +261,9 @@ export default function EmployerDashboard() {
                   <Send className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="flex flex-col justify-between flex-1">
-                  <div className="flex items-center flex-1">
-                    <span className="text-5xl font-bold font-display">{stats.totalInvitations + stats.testsRemaining > 0 ? Math.round((stats.totalInvitations / (stats.totalInvitations + stats.testsRemaining)) * 100) : 0}%</span>
+                  <div className="flex items-baseline flex-1">
+                    <span className="text-5xl font-bold font-display">{stats.totalInvitations}</span>
+                    <span className="text-xl font-display text-muted-foreground ml-1">/{stats.totalInvitations + stats.testsRemaining}</span>
                   </div>
                   <div className="mt-2">
                     <Button 
@@ -283,7 +284,7 @@ export default function EmployerDashboard() {
                   <Clock className="h-4 w-4 text-warning" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-bold font-display text-warning">{stats.pendingInvitations}</div>
+                  <div className="text-5xl font-bold font-display text-warning">{stats.pendingInvitations}</div>
                   
                 </CardContent>
               </Card>
@@ -294,7 +295,7 @@ export default function EmployerDashboard() {
                   <CheckCircle className="h-4 w-4 text-success" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-bold font-display text-success">{stats.completedTests}</div>
+                  <div className="text-5xl font-bold font-display text-success">{stats.completedTests}</div>
                   
                 </CardContent>
               </Card>
@@ -360,15 +361,14 @@ export default function EmployerDashboard() {
                             <div className="flex items-center gap-4">
                               {isCompleted && result ? (
                                 <>
-                                  <div className="text-right">
-                                    <p className={`font-bold font-display text-sm ${
+                                  <div className="flex items-center">
+                                    <p className={`font-bold font-display text-2xl ${
                                       scorePercent! >= 90 ? 'text-emerald-500' :
                                       scorePercent! >= 80 ? 'text-green-600' :
                                       scorePercent! >= 70 ? 'text-lime-500' :
                                       scorePercent! >= 40 ? 'text-orange-500' :
                                       'text-orange-300'
                                     }`}>{scorePercent}%</p>
-                                    <p className="text-xs text-muted-foreground">{Math.min(result.score, questionCount)}/{questionCount}</p>
                                   </div>
                                   {resultsUrl && (
                                     <Button variant="ghost" size="sm" asChild>
