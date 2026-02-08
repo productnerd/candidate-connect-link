@@ -34,6 +34,31 @@ interface DashboardStats {
   testsRemaining: number;
 }
 
+const formatTimeAgo = (dateStr: string) => {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  const diffWeeks = Math.floor(diffDays / 7);
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffWeeks < 5) return `${diffWeeks}w ago`;
+  return `${diffMonths}mo ago`;
+};
+
+const formatDaysLeft = (dateStr: string) => {
+  const now = new Date();
+  const expires = new Date(dateStr);
+  const diffDays = Math.max(0, Math.ceil((expires.getTime() - now.getTime()) / 86400000));
+  if (diffDays === 0) return 'Expires today';
+  if (diffDays === 1) return '1 day left';
+  return `${diffDays} days left`;
+};
+
 const ITEMS_PER_PAGE = 5;
 
 export default function EmployerDashboard() {
@@ -199,13 +224,13 @@ export default function EmployerDashboard() {
       <main className="container pt-24 pb-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">{organizationName || 'Employer Dashboard'}</h1>
+          <h1 className="text-3xl font-bold">{organizationName || 'Hiring Dashboard'}</h1>
           <p className="text-muted-foreground">Welcome back, {profile?.full_name || 'User'}!</p>
         </div>
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between">
             <TabsList className="bg-muted/50">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="analytics">
@@ -217,7 +242,7 @@ export default function EmployerDashboard() {
               <Button variant="hero" asChild>
                 <Link to="/invite">
                   <Send className="h-4 w-4 mr-2" />
-                  Send Invitation
+                  Send Test
                 </Link>
               </Button>
               <div className="text-xs text-muted-foreground text-right">
@@ -235,8 +260,10 @@ export default function EmployerDashboard() {
                   <CardTitle className="text-base font-medium text-muted-foreground">Invitations Sent</CardTitle>
                   <Send className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
-                <CardContent>
-                  <div className="text-4xl font-bold font-display">{stats.totalInvitations}/{stats.totalInvitations + stats.testsRemaining}</div>
+                <CardContent className="flex flex-col justify-between flex-1">
+                  <div className="flex items-center flex-1">
+                    <span className="text-5xl font-bold font-display">{stats.totalInvitations + stats.testsRemaining > 0 ? Math.round((stats.totalInvitations / (stats.totalInvitations + stats.testsRemaining)) * 100) : 0}%</span>
+                  </div>
                   <div className="mt-2">
                     <Button 
                       variant="secondary" 
@@ -327,7 +354,7 @@ export default function EmployerDashboard() {
                             <div className="flex-1 min-w-0">
                               <p className="font-medium truncate">{invitation.candidate_name || invitation.candidate_email}</p>
                               <p className="text-sm text-muted-foreground truncate">
-                                {invitation.test_library?.name || 'Assessment'} • {new Date(invitation.created_at).toLocaleDateString()}
+                                {invitation.test_library?.name || 'Assessment'} • {invitation.status === 'completed' ? formatTimeAgo(invitation.completed_at || invitation.created_at) : invitation.status === 'pending' ? formatDaysLeft(invitation.expires_at) : formatTimeAgo(invitation.created_at)}
                               </p>
                             </div>
                             <div className="flex items-center gap-4">
