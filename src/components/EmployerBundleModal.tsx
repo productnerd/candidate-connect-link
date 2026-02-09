@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -48,7 +48,8 @@ export function EmployerBundleModal({ open, onOpenChange }: EmployerBundleModalP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-transparent border-0 shadow-none">
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-transparent border-0 shadow-none" aria-describedby={undefined}>
+        <DialogTitle className="sr-only">Test Bundles</DialogTitle>
         <div className="relative">
           {/* Background Glow Effects */}
           <div className="absolute -inset-4 bg-gradient-to-br from-primary/30 via-primary/10 to-accent/30 rounded-3xl blur-2xl opacity-60" />
