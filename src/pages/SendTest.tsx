@@ -623,12 +623,6 @@ export default function SendTest() {
             </Card>
           )}
 
-          {/* Info Note */}
-          {!createdInvitation && (
-            <p className="text-sm text-muted-foreground mt-6 text-center">
-              The candidate will receive this exact email with a link to complete the assessment.
-            </p>
-          )}
         </div>
       </div>
     </div>
