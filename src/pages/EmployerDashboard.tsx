@@ -239,11 +239,15 @@ export default function EmployerDashboard() {
               </TabsTrigger>
             </TabsList>
             <div className="flex flex-col items-end gap-1">
-              <Button variant="hero" asChild>
-                <Link to="/invite">
-                  <Send className="h-4 w-4 mr-2" />
-                  Send Test
-                </Link>
+              <Button variant="hero" onClick={() => {
+                const params = new URLSearchParams();
+                if (profile?.full_name) params.set('name', profile.full_name);
+                if (profile?.email) params.set('email', profile.email);
+                if (organizationName) params.set('company', organizationName);
+                window.open(`/send-test?${params.toString()}`, '_blank');
+              }}>
+                <Send className="h-4 w-4 mr-2" />
+                Send Test
               </Button>
               <div className="text-xs text-muted-foreground text-right">
                 <p>{Math.max(0, 3 - dailyInvitesSent)} tests left today</p>
@@ -315,11 +319,15 @@ export default function EmployerDashboard() {
                     <Send className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                     <h3 className="text-lg font-semibold mb-2">No invitations yet</h3>
                     <p className="text-muted-foreground mb-4">Send your first test invitation to a candidate</p>
-                    <Button asChild>
-                      <Link to="/invite">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Send Invitation
-                      </Link>
+                    <Button onClick={() => {
+                      const params = new URLSearchParams();
+                      if (profile?.full_name) params.set('name', profile.full_name);
+                      if (profile?.email) params.set('email', profile.email);
+                      if (organizationName) params.set('company', organizationName);
+                      window.open(`/send-test?${params.toString()}`, '_blank');
+                    }}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Send Invitation
                     </Button>
                   </div>
                 ) : (
