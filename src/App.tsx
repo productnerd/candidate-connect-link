@@ -93,11 +93,7 @@ const App = () => (
             />
             <Route 
               path="/invite" 
-              element={
-                <ProtectedRoute requiredRole="employer">
-                  <SendInvitation />
-                </ProtectedRoute>
-              } 
+              element={<Navigate to="/send-test" replace />} 
             />
             <Route 
               path="/tests" 

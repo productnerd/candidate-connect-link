@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -130,6 +130,7 @@ function EmailPreview({
 
 export default function SendTest() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [tests, setTests] = useState<TestOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -140,9 +141,9 @@ export default function SendTest() {
   const form = useForm<SendTestFormData>({
     resolver: zodResolver(sendTestSchema),
     defaultValues: {
-      inviterName: '',
-      inviterEmail: '',
-      companyName: '',
+      inviterName: searchParams.get('name') || '',
+      inviterEmail: searchParams.get('email') || '',
+      companyName: searchParams.get('company') || '',
       candidateEmail: '',
       candidateName: '',
       testId: '',
