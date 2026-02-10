@@ -189,7 +189,7 @@ export default function TestLibrary() {
                   )}
 
                   <Button variant="hero" size="sm" asChild className="w-full">
-                    <Link to={`/invite?test=${test.id}`}>
+                    <Link to={`/send-test?test=${test.id}`}>
                       <Send className="h-4 w-4 mr-2" />
                       Send to Candidate
                     </Link>

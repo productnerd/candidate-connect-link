@@ -93,7 +93,7 @@ const App = () => (
             />
             <Route 
               path="/invite" 
-              element={<Navigate to="/send-test" replace />} 
+              element={<Navigate to="/candidate" replace />} 
             />
             <Route 
               path="/tests" 
