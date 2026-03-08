@@ -38,7 +38,7 @@ const App = () => (
       <AuthProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter basename="/candidate-connect-link">
           <Routes>
             {/* Redirect root to employer landing */}
             <Route path="/" element={<Navigate to="/employer" replace />} />

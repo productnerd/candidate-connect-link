@@ -81,7 +81,7 @@ serve(async (req) => {
     }
 
     // Determine success/cancel URLs based on bundle type
-    const origin = req.headers.get("origin") || "https://lovable.dev";
+    const origin = req.headers.get("origin") || "https://productnerd.github.io";
     
     const isEmployer = bundle_type.startsWith("employer_");
     
