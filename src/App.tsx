@@ -38,7 +38,7 @@ const App = () => (
       <AuthProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter basename="/candidate-connect-link">
+        <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/+$/, '')}>
           <Routes>
             {/* Redirect root to employer landing */}
             <Route path="/" element={<Navigate to="/employer" replace />} />

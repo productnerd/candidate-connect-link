@@ -68,7 +68,7 @@ export default function LearningSession() {
         .from('test_sessions')
         .upsert({
           id: sessionId,
-          test_id: 'ede289ed-48bf-4be9-9aaa-e8f5b1fec47e', // Use firstfreetest as a reference
+          test_id: 'b1e730b1-40e9-4d65-a924-38584eedde01', // ccat-cognitive test
           session_type: 'practice',
           status: 'in_progress',
           candidate_id: null,

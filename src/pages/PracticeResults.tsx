@@ -292,10 +292,10 @@ export default function PracticeResults() {
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
-          {test.slug === 'firstfreetest' ? (
+          {test.slug === 'ccat-cognitive' ? (
             <>
               <Button className="w-full" asChild>
-                <Link to="/candidate/start?test=secondfreetest">
+                <Link to="/candidate/start?test=verbal-reasoning">
                   <RotateCcw className="h-3 w-3 mr-2" />
                   Try One More Test
                 </Link>

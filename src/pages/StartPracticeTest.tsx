@@ -17,9 +17,9 @@ export default function StartPracticeTest() {
 
   const startPracticeSession = async () => {
     try {
-      // Check for test slug in URL params, default to firstfreetest
-      const testSlug = searchParams.get('test') || 'firstfreetest';
-      
+      // Check for test slug in URL params, default to ccat-cognitive
+      const testSlug = searchParams.get('test') || 'ccat-cognitive';
+
       // Get the requested practice test
       const { data: test, error: testError } = await supabase
         .from('test_library')
@@ -30,14 +30,14 @@ export default function StartPracticeTest() {
 
       if (testError) throw testError;
 
-      // Fallback to firstfreetest if requested test not found
+      // Fallback to ccat-cognitive if requested test not found
       let practiceTest = test;
       if (!practiceTest) {
         const { data: fallbackTest, error: fallbackError } = await supabase
           .from('test_library')
           .select('*')
           .eq('is_active', true)
-          .eq('slug', 'firstfreetest')
+          .eq('slug', 'ccat-cognitive')
           .maybeSingle();
 
         if (fallbackError) throw fallbackError;
