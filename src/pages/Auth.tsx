@@ -40,11 +40,8 @@ export default function Auth() {
         <div className="absolute inset-0 bg-foreground/60" />
         
         <div className="relative z-10 flex flex-col justify-between p-12 text-primary-foreground">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/20 backdrop-blur-sm">
-              <Brain className="h-8 w-8" />
-            </div>
-            <span className="text-2xl font-bold">CCAT Platform</span>
+          <div className="p-2.5 rounded-xl bg-primary w-fit">
+            <Brain className="h-8 w-8 text-primary-foreground" />
           </div>
           
           <div className="space-y-6">
@@ -94,11 +91,10 @@ export default function Auth() {
 
 
         <div className="w-full max-w-md">
-          <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
-            <div className="p-2 rounded-lg bg-primary">
+          <div className="lg:hidden flex items-center justify-center mb-8">
+            <div className="p-2 rounded-xl bg-primary">
               <Brain className="h-6 w-6 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold">CCAT Platform</span>
           </div>
           <AuthForm role={validRole} />
         </div>

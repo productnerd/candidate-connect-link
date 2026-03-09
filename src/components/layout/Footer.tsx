@@ -8,11 +8,10 @@ export const Footer = React.forwardRef<HTMLElement, Record<string, never>>((_, r
       <div className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-primary">
+            <Link to="/" className="inline-block">
+              <div className="p-2 rounded-xl bg-primary w-fit">
                 <Brain className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="text-lg font-bold">CCAT Platform</span>
             </Link>
             <p className="text-sm text-muted-foreground">
               The most accurate pre-employment cognitive assessment platform.

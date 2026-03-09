@@ -432,9 +432,10 @@ export default function PaymentSuccess() {
 
           {/* Footer */}
           <div className="px-6 pb-6">
-            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-              <Brain className="h-4 w-4 text-primary" />
-              <span>CCAT Platform</span>
+            <div className="flex items-center justify-center">
+              <div className="p-1.5 rounded-xl bg-primary">
+                <Brain className="h-4 w-4 text-primary-foreground" />
+              </div>
             </div>
           </div>
         </div>
