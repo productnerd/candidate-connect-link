@@ -23,7 +23,7 @@ serve(async (req) => {
     console.log("Verifying payment session:", session_id);
 
     // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    const stripe = new Stripe(Deno.env.get("CCAT_STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
 
