@@ -99,7 +99,7 @@ export default function AuthCallback() {
         .from('profiles')
         .select('role')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (profileError || !profile) {
         console.error('Profile fetch error:', profileError);
